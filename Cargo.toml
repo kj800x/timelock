@@ -17,3 +17,4 @@ log-update = "0.1.0"
 ctrlc = "3.1.4"
 rand_core = "0.5.1"
 clap = {version = "~2.27.0", features = ["yaml"]}
+hex = "0.4.2"

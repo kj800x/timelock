@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate clap;
 
+use clap::ArgMatches;
 use clap::{App, AppSettings};
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
@@ -8,6 +9,9 @@ use rand::rngs::OsRng;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use rand_core::RngCore;
+use std::fs::OpenOptions;
+use std::io;
+use std::io::prelude::*;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
@@ -61,14 +65,59 @@ fn generate_work(threads: u8) -> Vec<ThreadResult> {
         .collect()
 }
 
-fn print_results(results: Vec<ThreadResult>) {
+fn write_work(results: &Vec<ThreadResult>, target_file: &str) -> Result<bool, io::Error> {
+    let mut file = OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open(target_file)?;
+
+    for (_thread_index, initial_value, count, hash) in results {
+        file.write_all(
+            format!(
+                "{}:{}:{}\n",
+                hex::encode(initial_value),
+                hex::encode(hash),
+                count
+            )
+            .as_bytes(),
+        )?;
+    }
+
+    return Result::Ok(true);
+}
+
+fn print_work(results: &Vec<ThreadResult>) {
     println!("");
     for (thread_index, initial_value, count, hash) in results {
         println!(
-            "Thread {}: {} iterations\n\tInitial Seed: {:x?}\n\tResult Hash: {:x?}",
-            thread_index, count, initial_value, hash
+            "Thread {}: {} iterations\n\tInitial Seed: {}\n\tResult Hash: {}",
+            thread_index,
+            count,
+            hex::encode(initial_value),
+            hex::encode(hash)
         );
     }
+}
+
+fn work(work_matches: &ArgMatches) {
+    let output = work_matches.value_of("OUTPUT").unwrap(); // required
+    let threads: u8 = work_matches
+        .value_of("parallelism")
+        .unwrap() // defaulted
+        .parse()
+        .expect("Parallelism argument must be an integer");
+
+    let results = generate_work(threads);
+
+    fn write_work_panic(_: io::Error) -> Result<bool, io::Error> {
+        println!("Error writing work! You must manually construct the workfile");
+        Result::Ok(true)
+    }
+
+    write_work(&results, output)
+        .or_else(write_work_panic)
+        .unwrap();
+    print_work(&results);
 }
 
 fn main() {
@@ -78,14 +127,6 @@ fn main() {
         .get_matches();
 
     if let Some(work_matches) = matches.subcommand_matches("work") {
-        let threads: u8 = work_matches
-            .value_of("parallelism")
-            .expect("") // This doesn't matter since the yaml provides a default
-            .parse()
-            .expect("Parallelism argument must be an integer");
-
-        let results = generate_work(threads);
-
-        print_results(results);
+        work(work_matches);
     }
 }

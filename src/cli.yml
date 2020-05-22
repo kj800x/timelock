@@ -13,4 +13,5 @@ subcommands:
         - OUTPUT:
             help: Sets the output file to use
             required: true
+            default_value: "timelock.work"
             index: 1

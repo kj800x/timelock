@@ -1,3 +1,7 @@
+#[macro_use]
+extern crate clap;
+
+use clap::{App, AppSettings};
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 use rand::rngs::OsRng;
@@ -68,6 +72,20 @@ fn print_results(results: Vec<ThreadResult>) {
 }
 
 fn main() {
-    let results = generate_work(8);
-    print_results(results);
+    let yaml = load_yaml!("cli.yml");
+    let matches = App::from_yaml(yaml)
+        .setting(AppSettings::ArgRequiredElseHelp)
+        .get_matches();
+
+    if let Some(work_matches) = matches.subcommand_matches("work") {
+        let threads: u8 = work_matches
+            .value_of("parallelism")
+            .expect("") // This doesn't matter since the yaml provides a default
+            .parse()
+            .expect("Parallelism argument must be an integer");
+
+        let results = generate_work(threads);
+
+        print_results(results);
+    }
 }

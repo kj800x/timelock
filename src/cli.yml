@@ -1,0 +1,16 @@
+name: timelock
+version: "1.0"
+author: Kevin J. <kevin@kj800x.com>
+about: Encrypt with long proof of work requirements
+subcommands:
+  - work:
+      about: Generate proof of work
+      args:
+        - parallelism:
+            short: p
+            help: Sets number of threads to use
+            default_value: "4"
+        - OUTPUT:
+            help: Sets the output file to use
+            required: true
+            index: 1

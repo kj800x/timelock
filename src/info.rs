@@ -73,6 +73,7 @@ pub fn info(info_matches: &ArgMatches) {
 
         let mut f = timeago::Formatter::new();
         f.ago("");
+        f.num_items(3);
         let d = std::time::Duration::from_secs(((total_count as f64) / slope) as u64);
 
         println!(

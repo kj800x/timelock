@@ -1,3 +1,4 @@
+use crate::workfile;
 use clap::ArgMatches;
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
@@ -5,9 +6,7 @@ use rand::rngs::OsRng;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use rand_core::RngCore;
-use std::fs::OpenOptions;
 use std::io;
-use std::io::prelude::*;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
@@ -28,9 +27,7 @@ fn hash(iv: [u8; 32], stopped: &AtomicBool) -> ([u8; 32], u64) {
     return (bytes, i);
 }
 
-type ThreadResult = (u8, [u8; 32], u64, [u8; 32]);
-
-fn generate_work(threads: u8) -> Vec<ThreadResult> {
+fn generate_work(threads: u8) -> Vec<workfile::ThreadResult> {
     let stopped = Arc::new(AtomicBool::new(false));
     let handler_stopped_flag = Arc::clone(&stopped);
 
@@ -43,7 +40,7 @@ fn generate_work(threads: u8) -> Vec<ThreadResult> {
     OsRng.fill_bytes(&mut seed);
     let mut rng = ChaCha20Rng::from_seed(seed);
 
-    let mut join_handles: Vec<thread::JoinHandle<ThreadResult>> = Vec::new();
+    let mut join_handles: Vec<thread::JoinHandle<workfile::ThreadResult>> = Vec::new();
 
     for thread_index in 0..threads {
         let thread_stopped_flag = Arc::clone(&stopped);
@@ -61,32 +58,11 @@ fn generate_work(threads: u8) -> Vec<ThreadResult> {
         .collect()
 }
 
-fn write_work(results: &Vec<ThreadResult>, target_file: &str) -> Result<bool, io::Error> {
-    let mut file = OpenOptions::new()
-        .append(true)
-        .create(true)
-        .open(target_file)?;
-
-    for (_thread_index, initial_value, count, hash) in results {
-        file.write_all(
-            format!(
-                "{}:{}:{}\n",
-                hex::encode(initial_value),
-                hex::encode(hash),
-                count
-            )
-            .as_bytes(),
-        )?;
-    }
-
-    return Result::Ok(true);
-}
-
-fn print_work(results: &Vec<ThreadResult>) {
+fn print_work(results: &Vec<workfile::ThreadResult>) {
     println!("");
     for (thread_index, initial_value, count, hash) in results {
         println!(
-            "Thread {}: {} iterations\n\tInitial Seed: {}\n\tResult Hash: {}",
+            "Thread {}: {} iterations\n\tInitial Seed: {}\n\tResult Hash : {}",
             thread_index,
             count,
             hex::encode(initial_value),
@@ -96,6 +72,8 @@ fn print_work(results: &Vec<ThreadResult>) {
 }
 
 pub fn work(work_matches: &ArgMatches) {
+    println!("Work is being generated... Press CTRL+C to stop work and save to the workfile.");
+
     let output = work_matches.value_of("OUTPUT").unwrap(); // required
     let threads: u8 = work_matches
         .value_of("parallelism")
@@ -110,7 +88,7 @@ pub fn work(work_matches: &ArgMatches) {
         Result::Ok(true)
     }
 
-    write_work(&results, output)
+    workfile::write_work(&results, output)
         .or_else(write_work_panic)
         .unwrap();
     print_work(&results);

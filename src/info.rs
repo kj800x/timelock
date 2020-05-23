@@ -1,3 +1,4 @@
+use crate::workfile;
 use clap::ArgMatches;
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
@@ -49,12 +50,34 @@ fn decide_rate() -> f64 {
     slope
 }
 
-pub fn info(_info_matches: &ArgMatches) {
+pub fn info(info_matches: &ArgMatches) {
     println!("Calculating approximate hash rate...");
     let slope = decide_rate();
 
     println!(
         "Under current conditions, this computer can calculate {:.0} hashes per second",
         slope
-    )
+    );
+
+    let input = info_matches.value_of("INPUT").unwrap();
+
+    let workfile_exists = std::path::Path::new(input).exists();
+    if workfile_exists {
+        let work = workfile::read_work(input).unwrap();
+        let total_count: u64 = work.iter().map(|result| result.2).sum();
+
+        println!(
+            "The current workfile contains the work of {} hashes",
+            total_count
+        );
+
+        let mut f = timeago::Formatter::new();
+        f.ago("");
+        let d = std::time::Duration::from_secs(((total_count as f64) / slope) as u64);
+
+        println!(
+            "It would take about {} to solve the current workfile",
+            f.convert(d)
+        )
+    }
 }

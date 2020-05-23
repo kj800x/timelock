@@ -4,6 +4,7 @@ extern crate clap;
 use clap::{App, AppSettings};
 mod info;
 mod work;
+mod workfile;
 
 fn main() {
     let yaml = load_yaml!("cli.yml");

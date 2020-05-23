@@ -38,6 +38,10 @@ fn read_bytes(byte_str: &str) -> [u8; 32] {
   arr
 }
 
+pub fn total_count(work: Vec<ThreadResult>) -> u64 {
+  work.iter().map(|result| result.2).sum()
+}
+
 pub fn read_work(target_file: &str) -> Result<Vec<ThreadResult>, io::Error> {
   let file = File::open(target_file)?;
   let lines = io::BufReader::new(file).lines().map(|l| l.unwrap());

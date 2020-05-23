@@ -50,13 +50,22 @@ fn decide_rate() -> f64 {
     slope
 }
 
+fn estimate_duration(rate: f64, total_count: u64) -> String {
+    let mut f = timeago::Formatter::new();
+    f.ago("");
+    f.num_items(3);
+    let d = std::time::Duration::from_secs(((total_count as f64) / rate) as u64);
+
+    f.convert(d)
+}
+
 pub fn info(info_matches: &ArgMatches) {
     println!("Calculating approximate hash rate...");
-    let slope = decide_rate();
+    let rate = decide_rate();
 
     println!(
         "Under current conditions, this computer can calculate {:.0} hashes per second",
-        slope
+        rate
     );
 
     let input = info_matches.value_of("INPUT").unwrap();
@@ -64,21 +73,16 @@ pub fn info(info_matches: &ArgMatches) {
     let workfile_exists = std::path::Path::new(input).exists();
     if workfile_exists {
         let work = workfile::read_work(input).unwrap();
-        let total_count: u64 = work.iter().map(|result| result.2).sum();
+        let total_count = workfile::total_count(work);
 
         println!(
             "The current workfile contains the work of {} hashes",
             total_count
         );
 
-        let mut f = timeago::Formatter::new();
-        f.ago("");
-        f.num_items(3);
-        let d = std::time::Duration::from_secs(((total_count as f64) / slope) as u64);
-
         println!(
             "It would take about {} to solve the current workfile",
-            f.convert(d)
+            estimate_duration(rate, total_count)
         )
     }
 }

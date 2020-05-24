@@ -55,24 +55,24 @@ fn print_work(work: &Work) {
 pub fn work(matches: &ArgMatches) {
     println!("Work is being generated... Press CTRL+C to stop and save progress.");
 
-    let output = matches.value_of("OUTPUT").unwrap(); // required
+    let output = matches.value_of("OUTPUT").unwrap(); // Safe because defaulted in yaml
     let threads: u8 = matches
         .value_of("parallelism")
-        .unwrap() // defaulted
+        .unwrap() // Safe because defaulted in yaml
         .parse()
         .expect("Parallelism argument must be an integer");
 
     let results = generate_work(threads);
 
-    fn write_work_panic(err: io::Error) -> Result<(), io::Error> {
+    fn handle_write_error(err: io::Error) -> Result<(), io::Error> {
         println!("{:?}", err);
         println!("Error writing work! You must manually construct the workfile");
         Ok(())
     }
 
     workfile::write_work(&results, output)
-        .or_else(write_work_panic)
-        .unwrap();
+        .or_else(handle_write_error)
+        .unwrap(); // Safe because of the or_else
 
     print_work(&results);
 }

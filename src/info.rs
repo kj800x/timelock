@@ -29,7 +29,8 @@ fn decide_rate() -> f64 {
         y.push(duration.as_secs_f64());
     }
 
-    let (slope, _intercept): (f64, f64) = linear_regression(&y, &x).unwrap();
+    let (slope, _intercept): (f64, f64) = linear_regression(&y, &x)
+        .expect("Failed to evaluate linear regression when deciding computation power");
     slope
 }
 
@@ -43,7 +44,7 @@ fn estimate_duration(rate: f64, total_count: Count) -> String {
 }
 
 pub fn info(info_matches: &ArgMatches) {
-    let input = info_matches.value_of("INPUT").unwrap();
+    let input = info_matches.value_of("INPUT").unwrap(); // Safe because defaulted in yaml
 
     println!("Calculating approximate hash rate...");
 
@@ -56,7 +57,7 @@ pub fn info(info_matches: &ArgMatches) {
 
     let workfile_exists = Path::new(input).exists();
     if workfile_exists {
-        let work = workfile::read_work(input).unwrap();
+        let work = workfile::read_work(input).expect("Workfile was in an invalid format");
         let total_count = workfile::total_count(work);
 
         println!(

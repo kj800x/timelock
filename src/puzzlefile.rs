@@ -1,4 +1,5 @@
 use crate::core::*;
+use crate::hex_utils;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io;
@@ -18,20 +19,19 @@ pub fn write_puzzle(puzzle: &Puzzle, target_file: &str) -> Result<(), io::Error>
   Ok(())
 }
 
-fn read_bytes(byte_str: &str) -> Result<Hash, hex::FromHexError> {
-  let mut arr = [0u8; 32];
-  hex::decode_to_slice(byte_str, &mut arr)?;
-  Ok(arr)
-}
-
 pub fn read_puzzle(target_file: &str) -> Result<Puzzle, io::Error> {
   let file = File::open(target_file)?;
-  let lines = io::BufReader::new(file).lines().map(|l| l.unwrap());
+  let lines = io::BufReader::new(file)
+    .lines()
+    .map(|line| line.expect("Unable to read a line from the puzzle file"));
   let mut puzzle: Vec<PuzzlePiece> = Vec::new();
   for line in lines {
     let parts: Vec<&str> = line.split(':').collect();
-    let seed: [u8; 32] = read_bytes(parts[0]).expect("Puzzle file was in invalid format");
-    let count: u64 = parts[1].parse().unwrap();
+    let seed: [u8; 32] =
+      hex_utils::read_bytes(parts[0]).expect("Puzzle file was in invalid format (seed)");
+    let count: u64 = parts[1]
+      .parse()
+      .expect("Puzzle file was in invalid format (count)");
     puzzle.push((seed, count));
   }
   return Ok(puzzle);

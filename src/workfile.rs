@@ -1,4 +1,5 @@
 use crate::core::*;
+use crate::hex_utils;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io;
@@ -26,16 +27,6 @@ pub fn write_work(work: &Work, target_file: &str) -> Result<(), io::Error> {
   Ok(())
 }
 
-fn read_bytes(byte_str: &str) -> [u8; 32] {
-  let vector = hex::decode(byte_str).unwrap();
-
-  let mut arr = [0u8; 32];
-  for (place, element) in arr.iter_mut().zip(vector.iter()) {
-    *place = *element;
-  }
-  arr
-}
-
 pub fn total_count(work: Work) -> u64 {
   work.iter().map(|chain| chain.1).sum()
 }
@@ -46,8 +37,10 @@ pub fn read_work(target_file: &str) -> Result<Work, io::Error> {
   let mut results: Vec<Chain> = Vec::new();
   for line in lines {
     let parts: Vec<&str> = line.split(':').collect();
-    let seed: [u8; 32] = read_bytes(parts[0]);
-    let hash: [u8; 32] = read_bytes(parts[1]);
+    let seed: [u8; 32] =
+      hex_utils::read_bytes(parts[0]).expect("Work file was in invalid format (iv)");
+    let hash: [u8; 32] =
+      hex_utils::read_bytes(parts[1]).expect("Work file was in invalid format (hash)");
     let count: u64 = parts[2].parse().unwrap();
     results.push((seed, count, hash));
   }

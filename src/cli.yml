@@ -72,7 +72,7 @@ subcommands:
             default_value: "timelock.work"
 
   - info:
-      about: Determine encryption rate and predict the stored computation in a puzzle or work file
+      about: Determine encryption rate and predict the stored computation in a puzzle or work
       args:
         - INPUT:
             help: Set the work file to use

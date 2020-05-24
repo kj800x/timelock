@@ -6,12 +6,13 @@ use rand_core::RngCore;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Instant;
 
-pub fn hash(iv: Hash, stopped: &AtomicBool) -> Chain {
+// All of these functions need to run really tight, as they are the basis for this program's security
+pub fn hash(iv: Hash, target: Count, stopped: &AtomicBool) -> Chain {
   let mut sha = Sha256::new();
   let mut bytes = iv;
   let mut i = 0;
   loop {
-    if stopped.load(Ordering::Relaxed) {
+    if stopped.load(Ordering::Relaxed) || (target > 0 && i >= target) {
       break;
     }
     sha.input(&bytes);

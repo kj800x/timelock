@@ -15,11 +15,16 @@ fn xor(hash1: Hash, hash2: Hash) -> Hash {
 pub fn solve_puzzle(puzzle: Puzzle) -> Work {
     let mut last_hash: Hash = [0u8; 32];
     let mut work: Work = Vec::new();
-    for (xor_seed, count) in puzzle {
-        let seed = xor(xor_seed, last_hash);
-        last_hash = hash::hash_count(seed, count);
-        work.push((seed, count, last_hash));
+    for (i, (xor_seed, count)) in puzzle.iter().enumerate() {
+        println!(
+            "Beginning to solve chain {} which is {} computations long",
+            i, count
+        );
+        let seed = xor(*xor_seed, last_hash);
+        last_hash = hash::hash_count(seed, *count);
+        work.push((seed, *count, last_hash));
     }
+    println!("Puzzle solved!");
     work
 }
 
@@ -38,7 +43,7 @@ pub fn solve(solve_matches: &ArgMatches) {
     let output = solve_matches.value_of("OUTPUT").unwrap(); // Safe because defaulted in yaml
     let puzzle = puzzlefile::read_puzzle(input).expect("Failed to read puzzle");
     let work = solve_puzzle(puzzle);
-    workfile::write_work(&work, output).expect("Failed to write solution");
+    workfile::write_work(&work, false, output).expect("Failed to write solution");
 }
 
 pub fn puzzle(puzzle_matches: &ArgMatches) {

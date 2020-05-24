@@ -11,7 +11,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
 
-fn generate_work(threads: u8) -> Work {
+fn generate_work(threads: u8, target: Count) -> Work {
     let root_stop_flag = Arc::new(AtomicBool::new(false));
     let handler_stop_flag = Arc::clone(&root_stop_flag);
 
@@ -30,7 +30,9 @@ fn generate_work(threads: u8) -> Work {
         let thread_stop_flag = Arc::clone(&root_stop_flag);
         let mut iv = [0u8; 32];
         rng.fill(&mut iv);
-        join_handles.push(thread::spawn(move || hash::hash(iv, &thread_stop_flag)))
+        join_handles.push(thread::spawn(move || {
+            hash::hash(iv, target, &thread_stop_flag)
+        }))
     }
 
     join_handles
@@ -61,8 +63,13 @@ pub fn work(matches: &ArgMatches) {
         .unwrap() // Safe because defaulted in yaml
         .parse()
         .expect("Parallelism argument must be an integer");
+    let target: Count = matches
+        .value_of("target")
+        .unwrap() // Safe because defaulted in yaml
+        .parse()
+        .expect("Work target argument must be an integer");
 
-    let results = generate_work(threads);
+    let results = generate_work(threads, target);
 
     fn handle_write_error(err: io::Error) -> Result<(), io::Error> {
         println!("{:?}", err);
@@ -70,7 +77,7 @@ pub fn work(matches: &ArgMatches) {
         Ok(())
     }
 
-    workfile::write_work(&results, output)
+    workfile::write_work(&results, true, output)
         .or_else(handle_write_error)
         .unwrap(); // Safe because of the or_else
 

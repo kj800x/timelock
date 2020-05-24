@@ -10,6 +10,10 @@ subcommands:
             short: p
             help: Sets number of threads to use
             default_value: "4"
+        - target:
+            short: t
+            help: Sets target number of iterations per thread (0 for unlimited)
+            default_value: "0"
         - OUTPUT:
             help: Sets the workfile to use
             default_value: "timelock.work"
@@ -72,7 +76,7 @@ subcommands:
             default_value: "timelock.work"
 
   - info:
-      about: Determine encryption rate and predict the stored computation in a puzzle or work
+      about: Determine encryption rate and predict time to solve
       args:
         - work:
             short: w

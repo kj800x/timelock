@@ -6,9 +6,11 @@ use std::io;
 use std::io::prelude::*;
 use std::io::BufRead;
 
-pub fn write_work(work: &Work, target_file: &str) -> Result<(), io::Error> {
+pub fn write_work(work: &Work, append: bool, target_file: &str) -> Result<(), io::Error> {
   let mut file = OpenOptions::new()
-    .append(true)
+    .append(append)
+    .write(!append)
+    .truncate(!append)
     .create(true)
     .open(target_file)?;
 

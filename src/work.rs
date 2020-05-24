@@ -1,3 +1,4 @@
+use crate::core::*;
 use crate::workfile;
 use clap::ArgMatches;
 use crypto::digest::Digest;
@@ -11,7 +12,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
 
-fn hash(iv: [u8; 32], stopped: &AtomicBool) -> ([u8; 32], u64) {
+fn hash(iv: Hash, stopped: &AtomicBool) -> Chain {
     let mut sha = Sha256::new();
     let mut bytes = iv;
     let mut i = 0;
@@ -24,15 +25,15 @@ fn hash(iv: [u8; 32], stopped: &AtomicBool) -> ([u8; 32], u64) {
         sha.reset();
         i = i + 1;
     }
-    return (bytes, i);
+    return (iv, i, bytes);
 }
 
-fn generate_work(threads: u8) -> Vec<workfile::ThreadResult> {
-    let stopped = Arc::new(AtomicBool::new(false));
-    let handler_stopped_flag = Arc::clone(&stopped);
+fn generate_work(threads: u8) -> Work {
+    let root_stop_flag = Arc::new(AtomicBool::new(false));
+    let handler_stop_flag = Arc::clone(&root_stop_flag);
 
     ctrlc::set_handler(move || {
-        handler_stopped_flag.swap(true, Ordering::Relaxed);
+        handler_stop_flag.swap(true, Ordering::Relaxed);
     })
     .expect("Error setting Ctrl-C handler");
 
@@ -40,16 +41,13 @@ fn generate_work(threads: u8) -> Vec<workfile::ThreadResult> {
     OsRng.fill_bytes(&mut seed);
     let mut rng = ChaCha20Rng::from_seed(seed);
 
-    let mut join_handles: Vec<thread::JoinHandle<workfile::ThreadResult>> = Vec::new();
+    let mut join_handles: Vec<thread::JoinHandle<Chain>> = Vec::new();
 
-    for thread_index in 0..threads {
-        let thread_stopped_flag = Arc::clone(&stopped);
-        let mut initial_value = [0u8; 32];
-        rng.fill(&mut initial_value);
-        join_handles.push(thread::spawn(move || {
-            let (hash, count) = hash(initial_value, &thread_stopped_flag);
-            (thread_index, initial_value, count, hash)
-        }))
+    for _ in 0..threads {
+        let thread_stop_flag = Arc::clone(&root_stop_flag);
+        let mut iv = [0u8; 32];
+        rng.fill(&mut iv);
+        join_handles.push(thread::spawn(move || hash(iv, &thread_stop_flag)))
     }
 
     join_handles
@@ -58,24 +56,24 @@ fn generate_work(threads: u8) -> Vec<workfile::ThreadResult> {
         .collect()
 }
 
-fn print_work(results: &Vec<workfile::ThreadResult>) {
+fn print_work(work: &Work) {
     println!("");
-    for (thread_index, initial_value, count, hash) in results {
+    for (chain_index, (iv, count, hash)) in work.iter().enumerate() {
         println!(
-            "Thread {}: {} iterations\n\tInitial Seed: {}\n\tResult Hash : {}",
-            thread_index,
+            "Chain {}: {} iterations\n\tInitial Seed: {}\n\tResult Hash : {}",
+            chain_index,
             count,
-            hex::encode(initial_value),
+            hex::encode(iv),
             hex::encode(hash)
         );
     }
 }
 
-pub fn work(work_matches: &ArgMatches) {
-    println!("Work is being generated... Press CTRL+C to stop work and save to the workfile.");
+pub fn work(matches: &ArgMatches) {
+    println!("Work is being generated... Press CTRL+C to stop and save progress.");
 
-    let output = work_matches.value_of("OUTPUT").unwrap(); // required
-    let threads: u8 = work_matches
+    let output = matches.value_of("OUTPUT").unwrap(); // required
+    let threads: u8 = matches
         .value_of("parallelism")
         .unwrap() // defaulted
         .parse()
@@ -83,13 +81,15 @@ pub fn work(work_matches: &ArgMatches) {
 
     let results = generate_work(threads);
 
-    fn write_work_panic(_: io::Error) -> Result<bool, io::Error> {
+    fn write_work_panic(err: io::Error) -> Result<(), io::Error> {
+        println!("{:?}", err);
         println!("Error writing work! You must manually construct the workfile");
-        Result::Ok(true)
+        Ok(())
     }
 
     workfile::write_work(&results, output)
         .or_else(write_work_panic)
         .unwrap();
+
     print_work(&results);
 }

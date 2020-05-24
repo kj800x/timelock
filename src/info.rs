@@ -4,8 +4,10 @@ use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 use rand::rngs::OsRng;
 use rand_core::RngCore;
-use std::time::Instant;
+use std::path::Path;
+use std::time::{Duration, Instant};
 
+use crate::core::*;
 use linreg::linear_regression;
 
 fn time_hash(count: i32) -> std::time::Duration {
@@ -50,17 +52,20 @@ fn decide_rate() -> f64 {
     slope
 }
 
-fn estimate_duration(rate: f64, total_count: u64) -> String {
+fn estimate_duration(rate: f64, total_count: Count) -> String {
     let mut f = timeago::Formatter::new();
     f.ago("");
-    f.num_items(3);
-    let d = std::time::Duration::from_secs(((total_count as f64) / rate) as u64);
+    f.num_items(2);
+    let d = Duration::from_secs(((total_count as f64) / rate) as u64);
 
     f.convert(d)
 }
 
 pub fn info(info_matches: &ArgMatches) {
+    let input = info_matches.value_of("INPUT").unwrap();
+
     println!("Calculating approximate hash rate...");
+
     let rate = decide_rate();
 
     println!(
@@ -68,9 +73,7 @@ pub fn info(info_matches: &ArgMatches) {
         rate
     );
 
-    let input = info_matches.value_of("INPUT").unwrap();
-
-    let workfile_exists = std::path::Path::new(input).exists();
+    let workfile_exists = Path::new(input).exists();
     if workfile_exists {
         let work = workfile::read_work(input).unwrap();
         let total_count = workfile::total_count(work);

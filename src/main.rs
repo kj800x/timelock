@@ -2,7 +2,10 @@
 extern crate clap;
 
 use clap::{App, AppSettings};
+mod core;
 mod info;
+mod puzzle;
+mod puzzlefile;
 mod work;
 mod workfile;
 
@@ -18,5 +21,12 @@ fn main() {
 
     if let Some(info_matches) = matches.subcommand_matches("info") {
         info::info(info_matches);
+    }
+
+    if let Some(puzzle_matches) = matches.subcommand_matches("puzzle") {
+        puzzle::puzzle(puzzle_matches);
+    }
+    if let Some(solve_matches) = matches.subcommand_matches("solve") {
+        puzzle::solve(solve_matches);
     }
 }

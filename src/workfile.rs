@@ -1,19 +1,17 @@
-use std::convert::TryInto;
+use crate::core::*;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io;
 use std::io::prelude::*;
 use std::io::BufRead;
 
-pub type ThreadResult = (u8, [u8; 32], u64, [u8; 32]);
-
-pub fn write_work(results: &Vec<ThreadResult>, target_file: &str) -> Result<bool, io::Error> {
+pub fn write_work(work: &Work, target_file: &str) -> Result<(), io::Error> {
   let mut file = OpenOptions::new()
     .append(true)
     .create(true)
     .open(target_file)?;
 
-  for (_thread_index, initial_value, count, hash) in results {
+  for (initial_value, count, hash) in work {
     file.write_all(
       format!(
         "{}:{}:{}\n",
@@ -25,7 +23,7 @@ pub fn write_work(results: &Vec<ThreadResult>, target_file: &str) -> Result<bool
     )?;
   }
 
-  return Result::Ok(true);
+  Ok(())
 }
 
 fn read_bytes(byte_str: &str) -> [u8; 32] {
@@ -38,20 +36,20 @@ fn read_bytes(byte_str: &str) -> [u8; 32] {
   arr
 }
 
-pub fn total_count(work: Vec<ThreadResult>) -> u64 {
-  work.iter().map(|result| result.2).sum()
+pub fn total_count(work: Work) -> u64 {
+  work.iter().map(|chain| chain.1).sum()
 }
 
-pub fn read_work(target_file: &str) -> Result<Vec<ThreadResult>, io::Error> {
+pub fn read_work(target_file: &str) -> Result<Work, io::Error> {
   let file = File::open(target_file)?;
   let lines = io::BufReader::new(file).lines().map(|l| l.unwrap());
-  let mut results: Vec<ThreadResult> = Vec::new();
-  for (i, line) in lines.enumerate() {
+  let mut results: Vec<Chain> = Vec::new();
+  for line in lines {
     let parts: Vec<&str> = line.split(':').collect();
     let seed: [u8; 32] = read_bytes(parts[0]);
     let hash: [u8; 32] = read_bytes(parts[1]);
     let count: u64 = parts[2].parse().unwrap();
-    results.push((i.try_into().unwrap(), seed, count, hash));
+    results.push((seed, count, hash));
   }
   return Ok(results);
 }

@@ -1,8 +1,7 @@
 use crate::core::*;
+use crate::hash;
 use crate::workfile;
 use clap::ArgMatches;
-use crypto::digest::Digest;
-use crypto::sha2::Sha256;
 use rand::rngs::OsRng;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
@@ -11,22 +10,6 @@ use std::io;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
-
-fn hash(iv: Hash, stopped: &AtomicBool) -> Chain {
-    let mut sha = Sha256::new();
-    let mut bytes = iv;
-    let mut i = 0;
-    loop {
-        if stopped.load(Ordering::Relaxed) {
-            break;
-        }
-        sha.input(&bytes);
-        sha.result(&mut bytes);
-        sha.reset();
-        i = i + 1;
-    }
-    return (iv, i, bytes);
-}
 
 fn generate_work(threads: u8) -> Work {
     let root_stop_flag = Arc::new(AtomicBool::new(false));
@@ -47,7 +30,7 @@ fn generate_work(threads: u8) -> Work {
         let thread_stop_flag = Arc::clone(&root_stop_flag);
         let mut iv = [0u8; 32];
         rng.fill(&mut iv);
-        join_handles.push(thread::spawn(move || hash(iv, &thread_stop_flag)))
+        join_handles.push(thread::spawn(move || hash::hash(iv, &thread_stop_flag)))
     }
 
     join_handles

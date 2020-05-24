@@ -3,6 +3,7 @@ extern crate clap;
 
 use clap::{App, AppSettings};
 mod core;
+mod hash;
 mod info;
 mod puzzle;
 mod puzzlefile;

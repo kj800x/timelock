@@ -1,4 +1,5 @@
 use crate::core::*;
+use crate::hash;
 use crate::puzzlefile;
 use crate::workfile;
 use clap::ArgMatches;
@@ -11,8 +12,15 @@ fn xor(hash1: Hash, hash2: Hash) -> Hash {
     hash
 }
 
-pub fn solve_puzzle(_puzzle: Puzzle) -> Work {
-    Vec::new()
+pub fn solve_puzzle(puzzle: Puzzle) -> Work {
+    let mut last_hash: Hash = [0u8; 32];
+    let mut work: Work = Vec::new();
+    for (xor_seed, count) in puzzle {
+        let seed = xor(xor_seed, last_hash);
+        last_hash = hash::hash_count(seed, count);
+        work.push((seed, count, last_hash));
+    }
+    work
 }
 
 pub fn convert_to_puzzle(work: Work) -> Puzzle {

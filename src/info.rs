@@ -1,30 +1,11 @@
 use crate::workfile;
 use clap::ArgMatches;
-use crypto::digest::Digest;
-use crypto::sha2::Sha256;
-use rand::rngs::OsRng;
-use rand_core::RngCore;
 use std::path::Path;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use crate::core::*;
+use crate::hash;
 use linreg::linear_regression;
-
-fn time_hash(count: i32) -> std::time::Duration {
-    let mut sha = Sha256::new();
-    let mut bytes = [0u8; 32];
-    OsRng.fill_bytes(&mut bytes);
-    let start = Instant::now();
-
-    for _ in 0..count {
-        sha.input(&bytes);
-        sha.result(&mut bytes);
-        sha.reset();
-    }
-
-    let end = Instant::now();
-    end.duration_since(start)
-}
 
 fn decide_rate() -> f64 {
     let x: Vec<i32>;
@@ -44,7 +25,7 @@ fn decide_rate() -> f64 {
 
     let mut y: Vec<f64> = Vec::new();
     for count in &x {
-        let duration = time_hash(*count);
+        let duration = hash::time_hash(*count);
         y.push(duration.as_secs_f64());
     }
 

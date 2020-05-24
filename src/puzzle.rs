@@ -39,16 +39,16 @@ pub fn convert_to_puzzle(work: Work) -> Puzzle {
 }
 
 pub fn solve(solve_matches: &ArgMatches) {
-    let input = solve_matches.value_of("INPUT").unwrap(); // Safe because defaulted in yaml
-    let output = solve_matches.value_of("OUTPUT").unwrap(); // Safe because defaulted in yaml
+    let input = solve_matches.value_of("puzzle").unwrap(); // Safe because defaulted in yaml
+    let output = solve_matches.value_of("work").unwrap(); // Safe because defaulted in yaml
     let puzzle = puzzlefile::read_puzzle(input).expect("Failed to read puzzle");
     let work = solve_puzzle(puzzle);
     workfile::write_work(&work, false, output).expect("Failed to write solution");
 }
 
 pub fn puzzle(puzzle_matches: &ArgMatches) {
-    let input = puzzle_matches.value_of("INPUT").unwrap(); // Safe because defaulted in yaml
-    let output = puzzle_matches.value_of("OUTPUT").unwrap(); // Safe because defaulted in yaml
+    let input = puzzle_matches.value_of("work").unwrap(); // Safe because defaulted in yaml
+    let output = puzzle_matches.value_of("puzzle").unwrap(); // Safe because defaulted in yaml
     let work = workfile::read_work(input).expect("Failed to read workfile");
     let puzzle = convert_to_puzzle(work);
     puzzlefile::write_puzzle(&puzzle, output).expect("Failed to write puzzle");

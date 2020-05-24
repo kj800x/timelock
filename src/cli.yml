@@ -14,34 +14,34 @@ subcommands:
             short: t
             help: Sets target number of iterations per thread (0 for unlimited)
             default_value: "0"
-        - OUTPUT:
-            help: Sets the workfile to use
+        - work:
+            short: w
+            help: Set the workfile to use
             default_value: "timelock.work"
-            index: 1
 
   - puzzle:
       about: Convert work to a puzzle
       args:
-        - INPUT:
+        - work:
+            short: w
             help: Set the workfile to use
             default_value: "timelock.work"
-            index: 1
-        - OUTPUT:
-            help: Set the puzzlefile to write
+        - puzzle:
+            short: z
+            help: Set the puzzlefile to use
             default_value: "timelock.puzzle"
-            index: 2
 
   - solve:
       about: Solve a puzzle
       args:
-        - INPUT:
+        - puzzle:
+            short: z
             help: Set the puzzlefile to use
             default_value: "timelock.puzzle"
-            index: 1
-        - OUTPUT:
-            help: Set the workfile to write
+        - work:
+            short: w
+            help: Set the workfile to use
             default_value: "timelock.work"
-            index: 2
 
   - encrypt:
       about: Encrypt a file

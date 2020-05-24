@@ -57,7 +57,7 @@ fn print_work(work: &Work) {
 pub fn work(matches: &ArgMatches) {
     println!("Work is being generated... Press CTRL+C to stop and save progress.");
 
-    let output = matches.value_of("OUTPUT").unwrap(); // Safe because defaulted in yaml
+    let output = matches.value_of("work").unwrap(); // Safe because defaulted in yaml
     let threads: u8 = matches
         .value_of("parallelism")
         .unwrap() // Safe because defaulted in yaml

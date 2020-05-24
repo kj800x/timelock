@@ -1,10 +1,10 @@
 name: timelock
 version: "1.0"
 author: Kevin J. <kevin@kj800x.com>
-about: Encrypt with long proof of work requirements
+about: Cryptography with proof of computation requirements
 subcommands:
   - work:
-      about: Generate proof of work
+      about: Generate proof of work for puzzle creation
       args:
         - parallelism:
             short: p
@@ -72,7 +72,7 @@ subcommands:
             default_value: "timelock.work"
 
   - info:
-      about: Determine encryption rate and predict the difficulty of the current work file
+      about: Determine encryption rate and predict the stored computation in a puzzle or work file
       args:
         - INPUT:
             help: Set the work file to use

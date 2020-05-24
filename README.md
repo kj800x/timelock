@@ -2,12 +2,9 @@
 Rust implementation of [chained hashes timelock encryption](https://www.gwern.net/Self-decrypting-files#hashing) using SHA256.
 
 ## Install
-
+[Install Rust](https://rustup.rs/) then simply:
 ```
-git clone https://github.com/kj800x/timelock.git
-cd timelock
-cargo build --release
-sudo cp ./target/release/timelock /usr/bin/timelock
+cargo install --git https://github.com/kj800x/timelock
 ```
 
 ## Encryption Usage

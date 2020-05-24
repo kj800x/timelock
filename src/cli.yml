@@ -11,7 +11,7 @@ subcommands:
             help: Sets number of threads to use
             default_value: "4"
         - OUTPUT:
-            help: Sets the work file to use
+            help: Sets the workfile to use
             default_value: "timelock.work"
             index: 1
 
@@ -19,11 +19,11 @@ subcommands:
       about: Convert work to a puzzle
       args:
         - INPUT:
-            help: Set the work file to use
+            help: Set the workfile to use
             default_value: "timelock.work"
             index: 1
         - OUTPUT:
-            help: Set the puzzle file to write
+            help: Set the puzzlefile to write
             default_value: "timelock.puzzle"
             index: 2
 
@@ -31,11 +31,11 @@ subcommands:
       about: Solve a puzzle
       args:
         - INPUT:
-            help: Set the puzzle file to use
+            help: Set the puzzlefile to use
             default_value: "timelock.puzzle"
             index: 1
         - OUTPUT:
-            help: Set the work file to write
+            help: Set the workfile to write
             default_value: "timelock.work"
             index: 2
 
@@ -52,7 +52,7 @@ subcommands:
             index: 2
         - work:
             short: w
-            help: Set the work file to use
+            help: Set the workfile to use
             default_value: "timelock.work"
 
   - decrypt:
@@ -68,13 +68,17 @@ subcommands:
             index: 2
         - work:
             short: w
-            help: Set the work file to use
+            help: Set the workfile to use
             default_value: "timelock.work"
 
   - info:
       about: Determine encryption rate and predict the stored computation in a puzzle or work
       args:
-        - INPUT:
-            help: Set the work file to use
+        - work:
+            short: w
+            help: Set the workfile to use
             default_value: "timelock.work"
-            index: 1
+        - puzzle:
+            short: z
+            help: Set the puzzlefile to use
+            default_value: "timelock.puzzle"

@@ -1,11 +1,11 @@
-use crate::workfile;
-use clap::ArgMatches;
-use std::path::Path;
-use std::time::Duration;
-
 use crate::core::*;
 use crate::hash;
+use crate::puzzlefile;
+use crate::workfile;
+use clap::ArgMatches;
 use linreg::linear_regression;
+use std::path::Path;
+use std::time::Duration;
 
 fn decide_rate() -> f64 {
     let x: Vec<i32>;
@@ -44,29 +44,44 @@ fn estimate_duration(rate: f64, total_count: Count) -> String {
 }
 
 pub fn info(info_matches: &ArgMatches) {
-    let input = info_matches.value_of("INPUT").unwrap(); // Safe because defaulted in yaml
+    let work_path = info_matches.value_of("work").unwrap(); // Safe because defaulted in yaml
+    let puzzle_path = info_matches.value_of("puzzle").unwrap(); // Safe because defaulted in yaml
 
     println!("Calculating approximate hash rate...");
 
     let rate = decide_rate();
 
+    println!("");
     println!(
-        "Under current conditions, this computer can calculate {:.0} hashes per second",
+        "This computer can calculate about {:.0} hashes per second",
         rate
     );
 
-    let workfile_exists = Path::new(input).exists();
+    let workfile_exists = Path::new(work_path).exists();
     if workfile_exists {
-        let work = workfile::read_work(input).expect("Workfile was in an invalid format");
+        let work = workfile::read_work(work_path).expect("Workfile was in an invalid format");
         let total_count = workfile::total_count(work);
 
-        println!(
-            "The current workfile contains the work of {} hashes",
-            total_count
-        );
+        println!("");
+        println!("The workfile contains the work of {} hashes", total_count);
 
         println!(
-            "It would take about {} to solve the current workfile",
+            "It would take about {} to solve the workfile",
+            estimate_duration(rate, total_count)
+        )
+    }
+
+    let puzzlefile_exists = Path::new(puzzle_path).exists();
+    if puzzlefile_exists {
+        let puzzle =
+            puzzlefile::read_puzzle(puzzle_path).expect("Puzzlefile was in an invalid format");
+        let total_count = puzzlefile::total_count(puzzle);
+
+        println!("");
+        println!("The puzzlefile contains the work of {} hashes", total_count);
+
+        println!(
+            "It would take about {} to solve the puzzlefile",
             estimate_duration(rate, total_count)
         )
     }

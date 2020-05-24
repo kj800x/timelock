@@ -17,8 +17,8 @@ pub fn encrypt(matches: &ArgMatches) {
     .expect("Workfile must contain at least one chain")
     .2;
 
-  let mut input_file = File::open(input).expect("Unable to open input file");
-  let output_file = File::create(output).expect("Unable to open output file");
+  let mut input_file = File::open(input).expect("Failed to open input file");
+  let output_file = File::create(output).expect("Failed to open output file");
   let encryptor = AesSafe256Encryptor::new(&key);
   let mut writer = AesWriter::new(output_file, encryptor).expect("Error initializing AES");
 
@@ -36,8 +36,8 @@ pub fn decrypt(matches: &ArgMatches) {
     .expect("Workfile must contain at least one chain")
     .2;
 
-  let input_file = File::open(input).expect("Unable to open input file");
-  let mut output_file = File::create(output).expect("Unable to open output file");
+  let input_file = File::open(input).expect("Failed to open input file");
+  let mut output_file = File::create(output).expect("Failed to open output file");
   let decryptor = AesSafe256Decryptor::new(&key);
   let mut reader = AesReader::new(input_file, decryptor).expect("Error initializing AES");
 

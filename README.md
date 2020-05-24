@@ -76,7 +76,7 @@ It would take about 7 seconds to solve the puzzlefile
 
 ### Solve a puzzle
 You can solve a puzzle and reconstruct the corresponding workfile with `timelock solve`. This process can potentially
-take a long time, and progress is not saved (yet).
+take a long time, and partial progress is not saved (yet).
 
 ```
 $ timelock solve

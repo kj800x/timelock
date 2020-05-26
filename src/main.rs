@@ -9,6 +9,7 @@ mod hex_utils;
 mod info;
 mod puzzle;
 mod puzzlefile;
+mod time;
 mod work;
 mod workfile;
 

@@ -7,7 +7,7 @@ use linreg::linear_regression;
 use std::path::Path;
 use std::time::Duration;
 
-fn decide_rate() -> f64 {
+pub fn decide_rate() -> f64 {
     let x: Vec<i32>;
     if cfg!(debug_assertions) {
         x = vec![

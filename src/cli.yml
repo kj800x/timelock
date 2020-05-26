@@ -12,11 +12,11 @@ subcommands:
             default_value: "4"
         - target:
             short: t
-            help: Sets target number of iterations per thread (0 for unlimited)
+            help: Sets minimum target number of total iterations (0 for unlimited) (can use suffixes smhDMY)
             default_value: "0"
         - chain-length:
             short: c
-            help: Sets the max length of each individual chain (0 for unlimited)
+            help: Sets the max length of each individual chain (0 for unlimited) (can use suffixes smhDMY)
             default_value: "0"
         - work:
             short: w

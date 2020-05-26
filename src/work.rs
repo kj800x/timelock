@@ -1,5 +1,7 @@
 use crate::core::*;
 use crate::hash;
+use crate::info;
+use crate::time;
 use crate::workfile;
 use clap::ArgMatches;
 use rand::rngs::OsRng;
@@ -89,22 +91,16 @@ fn print_work(work: &Work) {
 pub fn work(matches: &ArgMatches) {
     println!("Work is being generated... Press CTRL+C to stop and save progress.");
 
+    let rate = info::decide_rate().round() as u64;
+
     let output = matches.value_of("work").unwrap(); // Safe because defaulted in yaml
     let threads: u8 = matches
         .value_of("parallelism")
         .unwrap() // Safe because defaulted in yaml
         .parse()
         .expect("Parallelism argument must be an integer");
-    let target: Count = matches
-        .value_of("target")
-        .unwrap() // Safe because defaulted in yaml
-        .parse()
-        .expect("Work target argument must be an integer");
-    let chain_length: Count = matches
-        .value_of("chain-length")
-        .unwrap() // Safe because defaulted in yaml
-        .parse()
-        .expect("Chain-length argument must be an integer");
+    let target: Count = time::parse_time(matches.value_of("target").unwrap(), rate); // Safe because defaulted in yaml
+    let chain_length: Count = time::parse_time(matches.value_of("chain-length").unwrap(), rate); // Safe because defaulted in yaml
 
     let results = generate_work(threads, target, chain_length);
 

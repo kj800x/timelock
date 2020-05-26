@@ -14,6 +14,10 @@ subcommands:
             short: t
             help: Sets target number of iterations per thread (0 for unlimited)
             default_value: "0"
+        - chain-length:
+            short: c
+            help: Sets the max length of each individual chain (0 for unlimited)
+            default_value: "0"
         - work:
             short: w
             help: Set the workfile to use

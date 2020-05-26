@@ -60,7 +60,7 @@ pub fn info(info_matches: &ArgMatches) {
     let workfile_exists = Path::new(work_path).exists();
     if workfile_exists {
         let work = workfile::read_work(work_path).expect("Workfile was in an invalid format");
-        let total_count = workfile::total_count(work);
+        let total_count = workfile::total_count(&work);
 
         println!("");
         println!("The workfile contains the work of {} hashes", total_count);

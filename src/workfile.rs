@@ -29,7 +29,7 @@ pub fn write_work(work: &Work, append: bool, target_file: &str) -> Result<(), io
   Ok(())
 }
 
-pub fn total_count(work: Work) -> u64 {
+pub fn total_count(work: &Work) -> u64 {
   work.iter().map(|chain| chain.1).sum()
 }
 

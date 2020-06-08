@@ -9,12 +9,12 @@ use std::fs::File;
 pub fn encrypt(matches: &ArgMatches) {
   let input = matches.value_of("INPUT").expect("INPUT is required");
   let output = matches.value_of("OUTPUT").expect("OUTPUT is required");
-  let workfile = matches.value_of("work").unwrap(); // Safe because defaulted in yaml
+  let workfile = matches.value_of("solution").unwrap(); // Safe because defaulted in yaml
 
-  let work = workfile::read_work(workfile).expect("Workfile must be in valid format");
+  let work = workfile::read_work(workfile).expect("SolutionFile must be in valid format");
   let key = work
     .last()
-    .expect("Workfile must contain at least one chain")
+    .expect("SolutionFile must contain at least one chain")
     .2;
 
   let mut input_file = File::open(input).expect("Failed to open input file");
@@ -28,12 +28,12 @@ pub fn encrypt(matches: &ArgMatches) {
 pub fn decrypt(matches: &ArgMatches) {
   let input = matches.value_of("INPUT").expect("INPUT is required");
   let output = matches.value_of("OUTPUT").expect("OUTPUT is required");
-  let workfile = matches.value_of("work").unwrap(); // Safe because defaulted in yaml
+  let workfile = matches.value_of("solution").unwrap(); // Safe because defaulted in yaml
 
-  let work = workfile::read_work(workfile).expect("Workfile must be in valid format");
+  let work = workfile::read_work(workfile).expect("SolutionFile must be in valid format");
   let key = work
     .last()
-    .expect("Workfile must contain at least one chain")
+    .expect("SolutionFile must contain at least one chain")
     .2;
 
   let input_file = File::open(input).expect("Failed to open input file");

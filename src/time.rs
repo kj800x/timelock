@@ -1,4 +1,13 @@
-pub fn parse_time(time_string: &str, get_rate: fn() -> u64) -> u64 {
+use crate::info;
+use cached::proc_macro::cached;
+
+#[cached]
+fn get_rate() -> u64 {
+  println!("Estimating rate of computation to convert time value into computation value");
+  info::decide_rate().round() as u64
+}
+
+pub fn parse_time(time_string: &str) -> u64 {
   const MINUTE_IN_SECONDS: u64 = 60;
   const HOUR_IN_SECONDS: u64 = MINUTE_IN_SECONDS * 24;
   const DAY_IN_SECONDS: u64 = HOUR_IN_SECONDS * 24;

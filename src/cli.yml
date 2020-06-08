@@ -20,32 +20,48 @@ subcommands:
             default_value: "0"
         - work:
             short: w
-            help: Set the workfile to use
+            help: Set the WorkFile to use
             default_value: "timelock.work"
+
+  - use:
+      about: Select amount of work to use for a puzzle
+      args:
+        - amount:
+            help: Set the target amount of computations to use for this puzzle (0 to use entire WorkFile) (can use suffixes smhDMY)
+            default_value: "0"
+            index: 1
+        - work:
+            short: w
+            help: Set the WorkFile to use
+            default_value: "timelock.work"
+        - solution:
+            short: s
+            help: Set the SolutionFile to write
+            default_value: "timelock.soln"
 
   - puzzle:
-      about: Convert work to a puzzle
+      about: Convert a SolutionFile to a PuzzleFile
       args:
-        - work:
-            short: w
-            help: Set the workfile to use
-            default_value: "timelock.work"
+        - solution:
+            short: s
+            help: Set the SolutionFile to use
+            default_value: "timelock.soln"
         - puzzle:
             short: z
-            help: Set the puzzlefile to use
-            default_value: "timelock.puzzle"
+            help: Set the PuzzleFile to write
+            default_value: "timelock.puzl"
 
   - solve:
-      about: Solve a puzzle
+      about: Solve a PuzzleFile
       args:
         - puzzle:
             short: z
-            help: Set the puzzlefile to use
-            default_value: "timelock.puzzle"
-        - work:
-            short: w
-            help: Set the workfile to use
-            default_value: "timelock.work"
+            help: Set the PuzzleFile to use
+            default_value: "timelock.puzl"
+        - solution:
+            short: s
+            help: Set the SolutionFile to write
+            default_value: "timelock.soln"
 
   - encrypt:
       about: Encrypt a file
@@ -58,10 +74,10 @@ subcommands:
             help: Set where to write the encrypted file
             required: true
             index: 2
-        - work:
-            short: w
-            help: Set the workfile to use
-            default_value: "timelock.work"
+        - solution:
+            short: s
+            help: Set the SolutionFile to use
+            default_value: "timelock.soln"
 
   - decrypt:
       about: Decrypt a file
@@ -74,19 +90,23 @@ subcommands:
             help: Set where to write the decrypted file
             required: true
             index: 2
-        - work:
-            short: w
-            help: Set the workfile to use
-            default_value: "timelock.work"
+        - solution:
+            short: s
+            help: Set the SolutionFile to use
+            default_value: "timelock.soln"
 
   - info:
       about: Determine encryption rate and predict time to solve
       args:
         - work:
             short: w
-            help: Set the workfile to use
+            help: Set the WorkFile to use
             default_value: "timelock.work"
+        - solution:
+            short: s
+            help: Set the SolutionFile to use
+            default_value: "timelock.soln"
         - puzzle:
             short: z
-            help: Set the puzzlefile to use
-            default_value: "timelock.puzzle"
+            help: Set the PuzzleFile to use
+            default_value: "timelock.puzl"

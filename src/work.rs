@@ -1,9 +1,7 @@
 use crate::core::*;
 use crate::hash;
-use crate::info;
 use crate::time;
 use crate::workfile;
-use cached::proc_macro::cached;
 use clap::ArgMatches;
 use rand::rngs::OsRng;
 use rand::{Rng, SeedableRng};
@@ -88,12 +86,6 @@ fn print_work(work: &Work) {
     }
 }
 
-#[cached]
-fn get_rate() -> u64 {
-    println!("Estimating rate of computation to convert time value into computation value");
-    info::decide_rate().round() as u64
-}
-
 pub fn work(matches: &ArgMatches) {
     let output = matches.value_of("work").unwrap(); // Safe because defaulted in yaml
 
@@ -107,8 +99,8 @@ pub fn work(matches: &ArgMatches) {
         .unwrap() // Safe because defaulted in yaml
         .parse()
         .expect("Parallelism argument must be an integer");
-    let target: Count = time::parse_time(matches.value_of("target").unwrap(), get_rate); // Safe because defaulted in yaml
-    let chain_length: Count = time::parse_time(matches.value_of("chain-length").unwrap(), get_rate); // Safe because defaulted in yaml
+    let target: Count = time::parse_time(matches.value_of("target").unwrap()); // Safe because defaulted in yaml
+    let chain_length: Count = time::parse_time(matches.value_of("chain-length").unwrap()); // Safe because defaulted in yaml
 
     println!("Work is being generated... Press CTRL+C to stop and save progress.");
 

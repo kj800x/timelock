@@ -9,6 +9,7 @@ mod hex_utils;
 mod info;
 mod puzzle;
 mod puzzlefile;
+mod select;
 mod time;
 mod work;
 mod workfile;
@@ -36,5 +37,8 @@ fn main() {
     }
     if let Some(decrypt_matches) = matches.subcommand_matches("decrypt") {
         crypto::decrypt(decrypt_matches);
+    }
+    if let Some(use_matches) = matches.subcommand_matches("use") {
+        select::select(use_matches);
     }
 }

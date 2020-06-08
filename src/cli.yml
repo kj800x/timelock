@@ -1,5 +1,5 @@
 name: timelock
-version: "1.0"
+version: "0.2.0"
 author: Kevin J. <kevin@kj800x.com>
 about: Cryptography with proof of computation requirements
 subcommands:

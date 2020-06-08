@@ -3,12 +3,12 @@ use crate::hash;
 use crate::info;
 use crate::time;
 use crate::workfile;
+use cached::proc_macro::cached;
 use clap::ArgMatches;
 use rand::rngs::OsRng;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use rand_core::RngCore;
-use std::io;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::channel;
 use std::sync::Arc;
@@ -88,31 +88,34 @@ fn print_work(work: &Work) {
     }
 }
 
+#[cached]
+fn get_rate() -> u64 {
+    println!("Estimating rate of computation to convert time value into computation value");
+    info::decide_rate().round() as u64
+}
+
 pub fn work(matches: &ArgMatches) {
-    println!("Work is being generated... Press CTRL+C to stop and save progress.");
-
-    let rate = info::decide_rate().round() as u64;
-
     let output = matches.value_of("work").unwrap(); // Safe because defaulted in yaml
+
+    // Test to see if we can write the output file before we generate the work
+    // It is safe to write an empty vector to the file, since we're working in append mode
+    workfile::write_work(&Vec::new(), true, output)
+        .expect("Refusing to do work - Unable to write to target file");
+
     let threads: u8 = matches
         .value_of("parallelism")
         .unwrap() // Safe because defaulted in yaml
         .parse()
         .expect("Parallelism argument must be an integer");
-    let target: Count = time::parse_time(matches.value_of("target").unwrap(), rate); // Safe because defaulted in yaml
-    let chain_length: Count = time::parse_time(matches.value_of("chain-length").unwrap(), rate); // Safe because defaulted in yaml
+    let target: Count = time::parse_time(matches.value_of("target").unwrap(), get_rate); // Safe because defaulted in yaml
+    let chain_length: Count = time::parse_time(matches.value_of("chain-length").unwrap(), get_rate); // Safe because defaulted in yaml
+
+    println!("Work is being generated... Press CTRL+C to stop and save progress.");
 
     let results = generate_work(threads, target, chain_length);
 
-    fn handle_write_error(err: io::Error) -> Result<(), io::Error> {
-        println!("{:?}", err);
-        println!("Error writing work! You must manually construct the workfile");
-        Ok(())
-    }
-
     workfile::write_work(&results, true, output)
-        .or_else(handle_write_error)
-        .unwrap(); // Safe because of the or_else
+        .expect("Sorry, unable to write work. Please report an issue and include this error");
 
     print_work(&results);
 }

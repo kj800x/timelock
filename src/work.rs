@@ -1,8 +1,8 @@
+use crate::cli;
 use crate::core::*;
 use crate::hash;
 use crate::time;
 use crate::workfile;
-use clap::ArgMatches;
 use rand::rngs::OsRng;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
@@ -86,27 +86,24 @@ fn print_work(work: &Work) {
     }
 }
 
-pub fn work(matches: &ArgMatches) {
-    let output = matches.value_of("work").unwrap(); // Safe because defaulted in yaml
-
+pub fn work(args: &cli::Work) {
     // Test to see if we can write the output file before we generate the work
     // It is safe to write an empty vector to the file, since we're working in append mode
-    workfile::write_work(&Vec::new(), true, output)
+    workfile::write_work(&Vec::new(), true, &args.work)
         .expect("Refusing to do work - Unable to write to target file");
 
-    let threads: u8 = matches
-        .value_of("parallelism")
-        .unwrap() // Safe because defaulted in yaml
+    let threads: u8 = args
+        .parallelism
         .parse()
         .expect("Parallelism argument must be an integer");
-    let target: Count = time::parse_time(matches.value_of("target").unwrap()); // Safe because defaulted in yaml
-    let chain_length: Count = time::parse_time(matches.value_of("chain-length").unwrap()); // Safe because defaulted in yaml
+    let target: Count = time::parse_time(&args.target);
+    let chain_length: Count = time::parse_time(&args.chain_length);
 
     println!("Work is being generated... Press CTRL+C to stop and save progress.");
 
     let results = generate_work(threads, target, chain_length);
 
-    workfile::write_work(&results, true, output)
+    workfile::write_work(&results, true, &args.work)
         .expect("Sorry, unable to write work. Please report an issue and include this error");
 
     print_work(&results);

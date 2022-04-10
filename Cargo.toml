@@ -1,20 +1,20 @@
 [package]
 name = "timelock"
-version = "0.2.0"
-authors = ["Kevin Johnson <kevin@coolkev.com>"]
+version = "0.2.1"
+authors = ["Kevin Johnson <kevin@kj800x.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rand_chacha = "0.2.1"
-rand = "0.7.2"
+rand_chacha = "0.3.1"
+rand = "0.8.5"
 rust-crypto = "0.2.36"
 ctrlc = "3.1.4"
-rand_core = "0.5.1"
-clap = {version = "~2.27.0", features = ["yaml"]}
+rand_core = "0.6.3"
+clap = {version = "3.1.8", features = ["derive"]}
 hex = "0.4.2"
 linreg = "0.2.0"
-timeago = "0.2.1"
+timeago = "0.3.1"
 aes-stream = "0.2.1"
-cached = "0.13.1"
+cached = "0.34.0"

@@ -1,7 +1,8 @@
-#[macro_use]
+use clap::Parser;
+
 extern crate clap;
 
-use clap::{App, AppSettings};
+mod cli;
 mod core;
 mod crypto;
 mod hash;
@@ -15,30 +16,30 @@ mod work;
 mod workfile;
 
 fn main() {
-    let yaml = load_yaml!("cli.yml");
-    let matches = App::from_yaml(yaml)
-        .setting(AppSettings::ArgRequiredElseHelp)
-        .get_matches();
+    let cli = cli::Cli::parse();
 
-    if let Some(work_matches) = matches.subcommand_matches("work") {
-        work::work(work_matches);
-    }
-    if let Some(info_matches) = matches.subcommand_matches("info") {
-        info::info(info_matches);
-    }
-    if let Some(puzzle_matches) = matches.subcommand_matches("puzzle") {
-        puzzle::puzzle(puzzle_matches);
-    }
-    if let Some(solve_matches) = matches.subcommand_matches("solve") {
-        puzzle::solve(solve_matches);
-    }
-    if let Some(encrypt_matches) = matches.subcommand_matches("encrypt") {
-        crypto::encrypt(encrypt_matches);
-    }
-    if let Some(decrypt_matches) = matches.subcommand_matches("decrypt") {
-        crypto::decrypt(decrypt_matches);
-    }
-    if let Some(use_matches) = matches.subcommand_matches("use") {
-        select::select(use_matches);
+    use cli::Commands::*;
+    match &cli.command {
+        Work(args) => {
+            work::work(args);
+        }
+        Info(args) => {
+            info::info(args);
+        }
+        Puzzle(args) => {
+            puzzle::puzzle(args);
+        }
+        Solve(args) => {
+            puzzle::solve(args);
+        }
+        Encrypt(args) => {
+            crypto::encrypt(args);
+        }
+        Decrypt(args) => {
+            crypto::decrypt(args);
+        }
+        Use(args) => {
+            select::select(args);
+        }
     }
 }

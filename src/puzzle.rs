@@ -1,8 +1,8 @@
+use crate::cli;
 use crate::core::*;
 use crate::hash;
 use crate::puzzlefile;
 use crate::workfile;
-use clap::ArgMatches;
 
 fn xor(hash1: Hash, hash2: Hash) -> Hash {
     let mut hash: Hash = [0u8; 32];
@@ -38,18 +38,14 @@ pub fn convert_to_puzzle(work: Work) -> Puzzle {
     puzzle
 }
 
-pub fn solve(solve_matches: &ArgMatches) {
-    let input = solve_matches.value_of("puzzle").unwrap(); // Safe because defaulted in yaml
-    let output = solve_matches.value_of("solution").unwrap(); // Safe because defaulted in yaml
-    let puzzle = puzzlefile::read_puzzle(input).expect("Failed to read puzzle");
+pub fn solve(args: &cli::Solve) {
+    let puzzle = puzzlefile::read_puzzle(&args.puzzle).expect("Failed to read puzzle");
     let work = solve_puzzle(puzzle);
-    workfile::write_work(&work, false, output).expect("Failed to write solution");
+    workfile::write_work(&work, false, &args.solution).expect("Failed to write solution");
 }
 
-pub fn puzzle(puzzle_matches: &ArgMatches) {
-    let input = puzzle_matches.value_of("solution").unwrap(); // Safe because defaulted in yaml
-    let output = puzzle_matches.value_of("puzzle").unwrap(); // Safe because defaulted in yaml
-    let work = workfile::read_work(input).expect("Failed to read workfile");
+pub fn puzzle(args: &cli::Puzzle) {
+    let work = workfile::read_work(&args.solution).expect("Failed to read workfile");
     let puzzle = convert_to_puzzle(work);
-    puzzlefile::write_puzzle(&puzzle, output).expect("Failed to write puzzle");
+    puzzlefile::write_puzzle(&puzzle, &args.puzzle).expect("Failed to write puzzle");
 }

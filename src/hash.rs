@@ -49,3 +49,44 @@ pub fn time_hash(count: i32) -> std::time::Duration {
   let end = Instant::now();
   end.duration_since(start)
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn hash_count_smoketest_null_array_20_times() {
+    let iv = [0u8; 32];
+
+    let result = hash_count(iv, 20);
+
+    assert_eq!(
+      result,
+      [
+        152, 33, 24, 130, 189, 19, 8, 155, 108, 207, 31, 202, 129, 247, 240, 228, 171, 246, 53, 42,
+        12, 57, 201, 177, 31, 20, 44, 172, 35, 63, 18, 128
+      ]
+    );
+  }
+
+  #[test]
+  fn hash_smoketest_null_array_20_times() {
+    let iv = [0u8; 32];
+
+    let ab = AtomicBool::new(false);
+
+    let result = hash(iv, 20, &ab);
+
+    assert_eq!(
+      result,
+      (
+        [0u8; 32],
+        20,
+        [
+          152, 33, 24, 130, 189, 19, 8, 155, 108, 207, 31, 202, 129, 247, 240, 228, 171, 246, 53,
+          42, 12, 57, 201, 177, 31, 20, 44, 172, 35, 63, 18, 128
+        ]
+      )
+    );
+  }
+}

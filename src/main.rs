@@ -10,6 +10,7 @@ mod hex_utils;
 mod info;
 mod puzzle;
 mod puzzlefile;
+mod rsa;
 mod select;
 mod time;
 mod work;
@@ -18,28 +19,39 @@ mod workfile;
 fn main() {
     let cli = cli::Cli::parse();
 
-    use cli::Commands::*;
+    use cli::*;
     match &cli.command {
-        Work(args) => {
+        Commands::Work(args) => {
             work::work(args);
         }
-        Info(args) => {
+        Commands::Info(args) => {
             info::info(args);
         }
-        Puzzle(args) => {
+        Commands::Puzzle(args) => {
             puzzle::puzzle(args);
         }
-        Solve(args) => {
+        Commands::Solve(args) => {
             puzzle::solve(args);
         }
-        Encrypt(args) => {
+        Commands::Encrypt(args) => {
             crypto::encrypt(args);
         }
-        Decrypt(args) => {
+        Commands::Decrypt(args) => {
             crypto::decrypt(args);
         }
-        Use(args) => {
+        Commands::Use(args) => {
             select::select(args);
         }
+        Commands::Rsa(args) => match &args.command {
+            RsaCommands::Encrypt(args) => {
+                rsa::encrypt(args);
+            }
+            RsaCommands::Decrypt(args) => {
+                rsa::decrypt(args);
+            }
+            RsaCommands::Keys(args) => {
+                rsa::keys(args);
+            }
+        },
     }
 }

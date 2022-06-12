@@ -108,6 +108,68 @@ pub struct Info {
     pub puzzle: String,
 }
 
+/// Use RSA to encrypt a file
+#[derive(Args)]
+pub struct RsaEncrypt {
+    /// Set the file to encrypt
+    #[clap()]
+    pub input: String,
+
+    /// Set where to write the encrypted file
+    #[clap()]
+    pub output: String,
+
+    /// Set the SolutionFile to use
+    #[clap(default_value_t = String::from("id_rsa.pub"), short)]
+    pub public_key: String,
+}
+
+/// Use RSA to decrypt a file
+#[derive(Args)]
+pub struct RsaDecrypt {
+    /// Set the file to decrypt
+    #[clap()]
+    pub input: String,
+
+    /// Set where to write the decrypted file
+    #[clap()]
+    pub output: String,
+
+    /// Set the SolutionFile to use
+    #[clap(default_value_t = String::from("id_rsa"), short)]
+    pub private_key: String,
+}
+
+/// Generate RSA keys from SolutionFile
+#[derive(Args)]
+pub struct RsaKeys {
+    /// Set the SolutionFile to use
+    #[clap(default_value_t = String::from("timelock.soln"), short)]
+    pub solution: String,
+
+    /// Set the RSA private key to write
+    #[clap(default_value_t = String::from("id_rsa"), short)]
+    pub private_key: String,
+
+    /// Set the RSA public key to write
+    #[clap(default_value_t = String::from("id_rsa.pub"), short)]
+    pub public_key: String,
+}
+
+/// Determine encryption rate and predict time to solve
+#[derive(Parser)]
+pub struct Rsa {
+    #[clap(subcommand)]
+    pub command: RsaCommands,
+}
+
+#[derive(Subcommand)]
+pub enum RsaCommands {
+    Encrypt(RsaEncrypt),
+    Decrypt(RsaDecrypt),
+    Keys(RsaKeys),
+}
+
 #[derive(Subcommand)]
 pub enum Commands {
     Work(Work),
@@ -117,6 +179,7 @@ pub enum Commands {
     Encrypt(Encrypt),
     Decrypt(Decrypt),
     Info(Info),
+    Rsa(Rsa),
 }
 
 #[derive(Parser)]

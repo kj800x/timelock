@@ -1,4 +1,4 @@
-use crate::core::*;
+use crate::types::*;
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 use rand::rngs::OsRng;

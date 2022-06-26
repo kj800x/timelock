@@ -3,17 +3,15 @@ use clap::Parser;
 extern crate clap;
 
 mod cli;
-mod core;
 mod crypto;
+mod formats;
 mod hash;
-mod hex_utils;
 mod info;
 mod puzzle;
-mod puzzlefile;
 mod select;
-mod time;
+mod types;
+mod utils;
 mod work;
-mod workfile;
 
 fn main() {
   let cli = cli::Cli::parse();
@@ -26,7 +24,7 @@ fn main() {
     Info(args) => {
       info::info(args);
     }
-    Puzzle(args) => {
+    Secure(args) => {
       puzzle::puzzle(args);
     }
     Solve(args) => {
@@ -40,6 +38,9 @@ fn main() {
     }
     Use(args) => {
       select::select(args);
+    }
+    _ => {
+      // todo for now
     }
   }
 }

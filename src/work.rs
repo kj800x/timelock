@@ -1,8 +1,8 @@
 use crate::cli;
-use crate::core::*;
+use crate::formats::workfile;
 use crate::hash;
-use crate::time;
-use crate::workfile;
+use crate::types::*;
+use crate::utils::time;
 use rand::rngs::OsRng;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;

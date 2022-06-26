@@ -1,4 +1,4 @@
-use crate::{cli, workfile};
+use crate::{cli, formats::workfile};
 
 use aesstream::{AesReader, AesWriter};
 use crypto::aessafe::{AesSafe256Decryptor, AesSafe256Encryptor};

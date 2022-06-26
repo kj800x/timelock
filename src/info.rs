@@ -1,8 +1,8 @@
 use crate::cli;
-use crate::core::*;
+use crate::formats::puzzlefile;
+use crate::formats::workfile;
 use crate::hash;
-use crate::puzzlefile;
-use crate::workfile;
+use crate::types::*;
 use linreg::linear_regression;
 use std::path::Path;
 use std::time::Duration;

@@ -1,4 +1,4 @@
-use crate::core::*;
+use crate::types::*;
 
 pub fn read_bytes(byte_str: &str) -> Result<Hash, hex::FromHexError> {
   let mut arr = [0u8; 32];

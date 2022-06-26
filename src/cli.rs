@@ -20,6 +20,14 @@ pub struct Work {
   pub work: String,
 }
 
+/// Create an empty timelock archive
+#[derive(Args)]
+pub struct Create {}
+
+/// Print or change the archive's settings
+#[derive(Args)]
+pub struct Settings {}
+
 /// Select amount of work to use for a puzzle
 #[derive(Args)]
 pub struct Use {
@@ -38,7 +46,7 @@ pub struct Use {
 
 /// Convert a SolutionFile to a PuzzleFile
 #[derive(Args)]
-pub struct Puzzle {
+pub struct Secure {
   /// Set the SolutionFile to use
   #[clap(default_value_t = String::from("timelock.soln"), short)]
   pub solution: String,
@@ -58,6 +66,18 @@ pub struct Solve {
   /// Set the SolutionFile to write
   #[clap(default_value_t = String::from("timelock.soln"), short)]
   pub solution: String,
+}
+
+/// List files in the archive
+#[derive(Args)]
+pub struct List {
+  /// Set the SolutionFile to use
+  #[clap(default_value_t = String::from("timelock.soln"), short)]
+  pub solution: String,
+
+  /// Set the PuzzleFile to write
+  #[clap(default_value_t = String::from("timelock.puzl"), short)]
+  pub puzzle: String,
 }
 
 /// Encrypt a file
@@ -112,8 +132,11 @@ pub struct Info {
 pub enum Commands {
   Work(Work),
   Use(Use),
-  Puzzle(Puzzle),
+  Settings(Settings),
+  Create(Create),
+  Secure(Secure),
   Solve(Solve),
+  List(List),
   Encrypt(Encrypt),
   Decrypt(Decrypt),
   Info(Info),

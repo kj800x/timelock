@@ -1,8 +1,8 @@
 use crate::cli;
-use crate::core::*;
+use crate::formats::puzzlefile;
+use crate::formats::workfile;
 use crate::hash;
-use crate::puzzlefile;
-use crate::workfile;
+use crate::types::*;
 
 fn xor(hash1: Hash, hash2: Hash) -> Hash {
   let mut hash: Hash = [0u8; 32];
@@ -44,7 +44,7 @@ pub fn solve(args: &cli::Solve) {
   workfile::write_work(&work, false, &args.solution).expect("Failed to write solution");
 }
 
-pub fn puzzle(args: &cli::Puzzle) {
+pub fn puzzle(args: &cli::Secure) {
   let work = workfile::read_work(&args.solution).expect("Failed to read workfile");
   let puzzle = convert_to_puzzle(work);
   puzzlefile::write_puzzle(&puzzle, &args.puzzle).expect("Failed to write puzzle");

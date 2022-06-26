@@ -6,22 +6,25 @@ use std::io;
 use std::io::prelude::*;
 use std::io::BufRead;
 
-pub fn write_puzzle(puzzle: &Puzzle, target_file: &str) -> Result<(), io::Error> {
-  let mut file = OpenOptions::new()
-    .write(true)
-    .create(true)
-    .open(target_file)?;
-
+pub fn write_puzzle(puzzle: &Puzzle, target: &mut dyn Write) -> Result<(), io::Error> {
   for (hash, count) in puzzle {
-    file.write_all(format!("{}:{}\n", hex::encode(hash), count).as_bytes())?;
+    target.write_all(format!("{}:{}\n", hex::encode(hash), count).as_bytes())?;
   }
 
   Ok(())
 }
 
-pub fn read_puzzle(target_file: &str) -> Result<Puzzle, io::Error> {
-  let file = File::open(target_file)?;
-  let lines = io::BufReader::new(file)
+pub fn write_puzzle_file(puzzle: &Puzzle, target_file: &str) -> Result<(), io::Error> {
+  let mut file = OpenOptions::new()
+    .write(true)
+    .create(true)
+    .open(target_file)?;
+
+  write_puzzle(puzzle, &mut file)
+}
+
+pub fn read_puzzle(target: &mut dyn BufRead) -> Result<Puzzle, io::Error> {
+  let lines = target
     .lines()
     .map(|line| line.expect("Failed to read a line from the puzzlefile"));
   let mut puzzle: Vec<PuzzlePiece> = Vec::new();
@@ -35,6 +38,13 @@ pub fn read_puzzle(target_file: &str) -> Result<Puzzle, io::Error> {
     puzzle.push((seed, count));
   }
   return Ok(puzzle);
+}
+
+pub fn read_puzzle_file(target_file: &str) -> Result<Puzzle, io::Error> {
+  let file = File::open(target_file)?;
+  let mut lines = io::BufReader::new(file);
+
+  read_puzzle(&mut lines)
 }
 
 pub fn total_count(puzzle: Puzzle) -> u64 {

@@ -13,7 +13,7 @@ foo-archive.timelock:
 - puzzle                        (this is the raw puzzle)
 - private.xor                   (this is the XOR of the private key and the solution)
 - solution           (if solved, this is the OTP to be XOR'ed with `private.xor` to get `private`)
-- private            (if solved, this is decryption key)
+- private            (if solved, this is the decryption key)
 - data:
   - 1.dat                        (this is an AES encrypted file)
   - 1.meta                       (this is a JSON file containing metadata about the file `1.dat`. This includes the file's original filename and path relative to the archive. It is either in plaintext or encrypted based on the archive's settings)

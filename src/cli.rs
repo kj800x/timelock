@@ -22,7 +22,11 @@ pub struct Work {
 
 /// Create an empty timelock archive
 #[derive(Args)]
-pub struct Create {}
+pub struct Create {
+  /// Set the WorkFile to use
+  #[clap(default_value_t = String::from("archive.timelock"), short)]
+  pub archive: String,
+}
 
 /// Print or change the archive's settings
 #[derive(Args)]

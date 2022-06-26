@@ -2,6 +2,7 @@ use clap::Parser;
 
 extern crate clap;
 
+mod archive;
 mod cli;
 mod crypto;
 mod formats;
@@ -18,27 +19,14 @@ fn main() {
 
   use cli::Commands::*;
   match &cli.command {
-    Work(args) => {
-      work::work(args);
-    }
-    Info(args) => {
-      info::info(args);
-    }
-    Secure(args) => {
-      puzzle::puzzle(args);
-    }
-    Solve(args) => {
-      puzzle::solve(args);
-    }
-    Encrypt(args) => {
-      crypto::encrypt(args);
-    }
-    Decrypt(args) => {
-      crypto::decrypt(args);
-    }
-    Use(args) => {
-      select::select(args);
-    }
+    Work(args) => work::work(args),
+    Create(args) => archive::create(args).expect("error creating archive (TODO)"),
+    Info(args) => info::info(args),
+    Secure(args) => puzzle::puzzle(args),
+    Solve(args) => puzzle::solve(args),
+    Encrypt(args) => crypto::encrypt(args),
+    Decrypt(args) => crypto::decrypt(args),
+    Use(args) => select::select(args),
     _ => {
       // todo for now
     }

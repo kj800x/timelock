@@ -3,6 +3,8 @@ use crate::formats::puzzlefile;
 use crate::formats::workfile;
 use crate::hash;
 use crate::types::*;
+use rand::rngs::OsRng;
+use rand_core::RngCore;
 
 fn xor(hash1: Hash, hash2: Hash) -> Hash {
   let mut hash: Hash = [0u8; 32];
@@ -39,7 +41,7 @@ pub fn convert_to_puzzle(work: Work) -> Puzzle {
 }
 
 pub fn solve(args: &cli::Solve) {
-  let puzzle = puzzlefile::read_puzzle(&args.puzzle).expect("Failed to read puzzle");
+  let puzzle = puzzlefile::read_puzzle_file(&args.puzzle).expect("Failed to read puzzle");
   let work = solve_puzzle(puzzle);
   workfile::write_work(&work, false, &args.solution).expect("Failed to write solution");
 }
@@ -47,5 +49,15 @@ pub fn solve(args: &cli::Solve) {
 pub fn puzzle(args: &cli::Secure) {
   let work = workfile::read_work(&args.solution).expect("Failed to read workfile");
   let puzzle = convert_to_puzzle(work);
-  puzzlefile::write_puzzle(&puzzle, &args.puzzle).expect("Failed to write puzzle");
+  puzzlefile::write_puzzle_file(&puzzle, &args.puzzle).expect("Failed to write puzzle");
+}
+
+pub fn new_blank_puzzle() -> Puzzle {
+  let mut seed = [0u8; 32];
+  OsRng.fill_bytes(&mut seed);
+
+  let mut puzzle: Puzzle = Vec::new();
+  puzzle.push((seed, 0));
+
+  puzzle
 }

@@ -92,7 +92,7 @@ pub fn info(args: &cli::Info) {
   let puzzlefile_exists = Path::new(&args.puzzle).exists();
   if puzzlefile_exists {
     let puzzle =
-      puzzlefile::read_puzzle(&args.puzzle).expect("PuzzleFile was in an invalid format");
+      puzzlefile::read_puzzle_file(&args.puzzle).expect("PuzzleFile was in an invalid format");
     let total_count = puzzlefile::total_count(puzzle);
 
     println!("");

@@ -63,6 +63,10 @@ pub struct Secure {
 /// Solve a PuzzleFile
 #[derive(Args)]
 pub struct Solve {
+  /// Set the WorkFile to use
+  #[clap(default_value_t = String::from("archive.timelock"), short)]
+  pub archive: String,
+
   /// Set the PuzzleFile to use
   #[clap(default_value_t = String::from("timelock.puzl"), short)]
   pub puzzle: String,

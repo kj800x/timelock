@@ -14,7 +14,7 @@ fn xor(hash1: Hash, hash2: Hash) -> Hash {
   hash
 }
 
-pub fn solve_puzzle(puzzle: Puzzle) -> Work {
+pub fn solve_puzzle(puzzle: &Puzzle) -> Work {
   let mut last_hash: Hash = [0u8; 32];
   let mut work: Work = Vec::new();
   for (i, (xor_seed, count)) in puzzle.iter().enumerate() {
@@ -40,11 +40,11 @@ pub fn convert_to_puzzle(work: Work) -> Puzzle {
   puzzle
 }
 
-pub fn solve(args: &cli::Solve) {
-  let puzzle = puzzlefile::read_puzzle_file(&args.puzzle).expect("Failed to read puzzle");
-  let work = solve_puzzle(puzzle);
-  workfile::write_work(&work, false, &args.solution).expect("Failed to write solution");
-}
+// pub fn solve(args: &cli::Solve) {
+//   let puzzle = puzzlefile::read_puzzle_file(&args.puzzle).expect("Failed to read puzzle");
+//   let work = solve_puzzle(&puzzle);
+//   workfile::write_work(&work, false, &args.solution).expect("Failed to write solution");
+// }
 
 pub fn puzzle(args: &cli::Secure) {
   let work = workfile::read_work(&args.solution).expect("Failed to read workfile");

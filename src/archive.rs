@@ -6,7 +6,7 @@ use rand::SeedableRng;
 use rand_chacha::ChaCha20Rng;
 use rsa::pkcs1::EncodeRsaPublicKey;
 use rsa::RsaPrivateKey;
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::path::Path;
@@ -29,7 +29,7 @@ pub fn create(args: &cli::Create) -> ZipResult<()> {
   // Generate archive contents
   // - Puzzle
   let blank_puzzle = puzzle::new_blank_puzzle();
-  let work = solve_puzzle(blank_puzzle);
+  let work = solve_puzzle(&blank_puzzle);
   let solution_key = get_solution_key(&work);
 
   // - RSA crypto
@@ -69,8 +69,8 @@ pub fn create(args: &cli::Create) -> ZipResult<()> {
 pub fn solve(args: &cli::Solve) -> ZipResult<()> {
   let path = Path::new(&args.archive);
 
-  if path.exists() {
-    panic!("archive does not exists")
+  if !path.exists() {
+    panic!("archive does not exist")
   }
 
   let file = File::open(&path).unwrap();
@@ -79,7 +79,7 @@ pub fn solve(args: &cli::Solve) -> ZipResult<()> {
   let puzzle_contents = zip.by_name("puzzle")?;
   let puzzle = puzzlefile::read_puzzle(&mut BufReader::new(puzzle_contents))?;
 
-  let work = solve_puzzle(puzzle);
+  let work = solve_puzzle(&puzzle);
   let solution_key = get_solution_key(&work);
 
   // - RSA crypto
@@ -89,12 +89,19 @@ pub fn solve(args: &cli::Solve) -> ZipResult<()> {
   // This is all deterministic since we're using a seeded ChaCha RNG
   let private_key = RsaPrivateKey::new(&mut rng, bits).expect("failed to generate a key");
 
-  let file = File::append(&path).unwrap();
+  let file = OpenOptions::new().append(true).open(&path)?;
   let options = FileOptions::default()
     .compression_method(zip::CompressionMethod::Stored)
     .unix_permissions(0o755);
-  zip_writer.start_file("private", options)?;
-  zip_writer.write_all(private_key.to_pkcs1_pem(rsa::pkcs8::LineEnding::CRLF))?;
+  let mut zip = ZipWriter::new(file);
+  zip.start_file("private", options)?;
+  zip.write_all(
+    private_key
+      .to_pkcs1_pem(rsa::pkcs8::LineEnding::CRLF)
+      .unwrap()
+      .as_bytes(),
+  )?;
 
+  zip.finish()?;
   Ok(())
 }

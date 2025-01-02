@@ -23,7 +23,7 @@ fn main() {
     Create(args) => archive::create(args).expect("error creating archive (TODO)"),
     Info(args) => info::info(args),
     Secure(args) => puzzle::puzzle(args),
-    Solve(args) => puzzle::solve(args),
+    Solve(args) => archive::solve(args).expect("error solving puzzle"),
     Encrypt(args) => crypto::encrypt(args),
     Decrypt(args) => crypto::decrypt(args),
     Use(args) => select::select(args),

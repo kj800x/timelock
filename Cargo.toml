@@ -1,22 +1,25 @@
 [package]
 name = "timelock"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["Kevin Johnson <kevin@kj800x.com>"]
-edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+edition = "2021"
 
 [dependencies]
-rand_chacha = "0.3.1"
-rand = "0.8.5"
-rust-crypto = "0.2.36"
-ctrlc = "3.1.4"
-rand_core = "0.6.3"
-clap = {version = "3.1.8", features = ["derive"]}
-hex = "0.4.2"
+cached = "0.54.0"
+clap = { version = "4.5.23", features = ["derive"] }
+ctrlc = "3.4.5"
+hex = "0.4.3"
 linreg = "0.2.0"
-timeago = "0.3.1"
+rand = "0.8.5"
+rand_chacha = "0.3.1"
+rand_core = "0.6.4"
+rust-crypto = "0.2.36"
+timeago = "0.4.2"
+radix_fmt = "1.0.0"
+rsa = { version = "0.9.7", features = ["serde"] }
 aes-stream = "0.2.1"
-cached = "0.34.0"
-zip = "0.6.2"
-rsa = "0.6.0" 
+
+[dev-dependencies]
+assert_cmd = "2.0.14"
+assert_fs = "1.1.1"
+predicates = "3.1.0"

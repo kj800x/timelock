@@ -1,34 +1,30 @@
-use clap::Parser;
+use std::path::PathBuf;
 
-extern crate clap;
+use clap::Parser;
 
 mod archive;
 mod cli;
-mod crypto;
-mod formats;
 mod hash;
+mod hex_utils;
 mod info;
-mod puzzle;
-mod select;
+mod time;
 mod types;
-mod utils;
 mod work;
+mod workfile;
 
 fn main() {
-  let cli = cli::Cli::parse();
+    use cli::Commands::*;
+    let cli = cli::Cli::parse();
 
-  use cli::Commands::*;
-  match &cli.command {
-    Work(args) => work::work(args),
-    Create(args) => archive::create(args).expect("error creating archive (TODO)"),
-    Info(args) => info::info(args),
-    Secure(args) => puzzle::puzzle(args),
-    Solve(args) => archive::solve(args).expect("error solving puzzle"),
-    Encrypt(args) => crypto::encrypt(args),
-    Decrypt(args) => crypto::decrypt(args),
-    Use(args) => select::select(args),
-    _ => {
-      // todo for now
+    match &cli.command {
+        Work(args) => {
+            work::work(args);
+        }
+        Info(args) => {
+            info::info(args);
+        }
+        New(args) => {
+            archive::Archive::create(PathBuf::from(args.file.to_owned()));
+        }
     }
-  }
 }

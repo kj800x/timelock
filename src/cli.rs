@@ -1,3 +1,5 @@
+use std::path::{Path, PathBuf};
+
 use clap::{Args, Parser, Subcommand};
 
 /// Generate proof of work for puzzle creation
@@ -28,11 +30,46 @@ pub struct Info {
     pub work: String,
 }
 
+/// List info about an archive
+#[derive(Args)]
+pub struct ArchiveInfo {
+    /// The path to the archive
+    pub archive: PathBuf,
+}
+
+/// Encrypt a file into an archive
+#[derive(Args)]
+pub struct Encrypt {
+    /// The path to the archive
+    pub archive: PathBuf,
+
+    /// The path to the file to archive
+    pub file: PathBuf,
+
+    /// The name of the file within the archive
+    /// If not provided, the file will be archived under the same path
+    pub archive_name: Option<String>,
+}
+
+/// Decrypt a file from an archive
+#[derive(Args)]
+pub struct Decrypt {
+    /// The path to the archive
+    pub archive: PathBuf,
+
+    /// The name of the file within the archive
+    pub archive_name: String,
+
+    /// The path to save the file
+    /// If not provided, the file will be saved based on the archive name
+    pub file: Option<PathBuf>,
+}
+
 /// Create a new archive
 #[derive(Args)]
 pub struct New {
-    /// The name of the archive
-    pub file: String,
+    /// The path to the archive
+    pub archive: PathBuf,
 }
 
 #[derive(Subcommand)]
@@ -40,6 +77,9 @@ pub enum Commands {
     Work(Work),
     New(New),
     Info(Info),
+    ArchiveInfo(ArchiveInfo),
+    Encrypt(Encrypt),
+    Decrypt(Decrypt),
 }
 
 #[derive(Parser)]

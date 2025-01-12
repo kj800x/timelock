@@ -18,6 +18,7 @@ timeago = "0.4.2"
 radix_fmt = "1.0.0"
 rsa = { version = "0.9.7", features = ["serde"] }
 aes-stream = "0.2.1"
+uuid = { version = "1.11.1", features = ["v4"] }
 
 [dev-dependencies]
 assert_cmd = "2.0.14"

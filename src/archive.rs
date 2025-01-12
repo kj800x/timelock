@@ -1,21 +1,19 @@
 use aesstream::{AesReader, AesWriter};
-use crypto::{
-    aessafe::{AesSafe256Decryptor, AesSafe256Encryptor},
-    symmetriccipher::BlockEncryptor,
-};
+use crypto::aessafe::{AesSafe256Decryptor, AesSafe256Encryptor};
 use radix_fmt::radix;
 use rand::{RngCore, SeedableRng};
 use rand_chacha::ChaCha20Rng;
-use rand_core::OsRng;
 use rsa::{
-    pkcs1::{EncodeRsaPrivateKey, EncodeRsaPublicKey},
-    RsaPrivateKey, RsaPublicKey,
+    pkcs1::{DecodeRsaPrivateKey, DecodeRsaPublicKey, EncodeRsaPrivateKey, EncodeRsaPublicKey},
+    Pkcs1v15Encrypt, RsaPrivateKey, RsaPublicKey,
 };
 use std::{
     fs::File,
     io::{Cursor, Read, Seek, SeekFrom, Write},
+    os::unix::ffi::OsStrExt,
     path::PathBuf,
 };
+use uuid::Uuid;
 
 trait AesEncryption {
     fn aes_encrypt(&self, key: &[u8; 32]) -> Vec<u8>;
@@ -43,6 +41,12 @@ impl AesEncryption for Vec<u8> {
     }
 }
 
+#[derive(Debug)]
+pub struct TarListing {
+    entries: Vec<(TarHeader, u64)>,
+}
+
+#[derive(Debug)]
 struct TarHeader {
     name: String,
     mode: u64,
@@ -87,15 +91,19 @@ trait SliceExtensions {
     fn padded(&self, size: usize) -> Vec<u8>;
 }
 
+fn padding_for(buffer_size: u64, multiple_of: u64) -> u64 {
+    if buffer_size % multiple_of == 0 {
+        0
+    } else {
+        multiple_of - (buffer_size % multiple_of)
+    }
+}
+
 impl SliceExtensions for [u8] {
     fn padded(&self, size: usize) -> Vec<u8> {
         let mut padded = self.to_vec();
-        let padding = if self.len() % size == 0 {
-            0
-        } else {
-            size - (self.len() % size)
-        };
-        padded.resize(self.len() + padding, b'\0');
+        let padding = padding_for(self.len() as u64, size as u64);
+        padded.resize(self.len() + padding as usize, b'\0');
         padded
     }
 }
@@ -209,8 +217,25 @@ impl TarHeader {
         }
     }
 
-    fn from_bytes() -> Self {
-        todo!();
+    fn from_bytes(bytes: &[u8; 512]) -> Self {
+        let name = std::str::from_utf8(&bytes[0..100])
+            .unwrap()
+            .trim_end_matches('\0')
+            .to_owned();
+        let mode = u64::from_str_radix(std::str::from_utf8(&bytes[100..107]).unwrap(), 8).unwrap();
+        let uid = u64::from_str_radix(std::str::from_utf8(&bytes[108..115]).unwrap(), 8).unwrap();
+        let gid = u64::from_str_radix(std::str::from_utf8(&bytes[116..123]).unwrap(), 8).unwrap();
+        let size = u64::from_str_radix(std::str::from_utf8(&bytes[124..135]).unwrap(), 8).unwrap();
+        let mtime = u64::from_str_radix(std::str::from_utf8(&bytes[136..147]).unwrap(), 8).unwrap();
+
+        Self {
+            name,
+            mode,
+            uid,
+            gid,
+            size,
+            mtime,
+        }
     }
 
     fn as_bytes(&self) -> Vec<u8> {
@@ -264,11 +289,155 @@ impl Archive<File> {
         archive
     }
 
-    fn load(file: PathBuf) -> Self {
+    pub fn load(file: PathBuf) -> Self {
         let file = File::options().write(true).read(true).open(file).unwrap();
         let mut archive = Archive { file };
         archive.verify().expect("Archive is not in a valid state");
         archive
+    }
+
+    pub fn info(&mut self) {
+        println!("{:?}", self.listing());
+
+        let puzzle = self.puzzle();
+        println!("{}", puzzle.as_str());
+
+        if let Some(key) = puzzle.solution() {
+            println!("Solved!");
+            println!("AES Key: {}", hex::encode(key));
+            println!(
+                "RSA Private Key: {}",
+                String::from_utf8(self.read_file_contents("rsa_id.enc").aes_decrypt(&key)).unwrap()
+            );
+
+            let private_key = RsaPrivateKey::from_pkcs1_pem(
+                &String::from_utf8(self.read_file_contents("rsa_id.enc").aes_decrypt(&key))
+                    .unwrap(),
+            )
+            .unwrap();
+
+            let uuids = self
+                .listing()
+                .entries
+                .iter()
+                .filter_map(|(header, _)| {
+                    if header.name.starts_with("aes_keys/") {
+                        // extract the uuid from the filename
+                        let uuid = header.name.split('/').last().unwrap();
+                        Some(uuid.to_owned())
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<String>>();
+
+            for uuid in uuids {
+                let encrypted_aes_key = self.read_file_contents(&format!("aes_keys/{}", uuid));
+                let aes_key = private_key
+                    .decrypt(Pkcs1v15Encrypt {}, &encrypted_aes_key)
+                    .unwrap();
+
+                let encrypted_filename = self.read_file_contents(&format!("filenames/{}", uuid));
+                let filename = String::from_utf8(
+                    encrypted_filename.aes_decrypt(&aes_key.clone().try_into().unwrap()),
+                )
+                .unwrap();
+
+                println!("Filename: {}", filename);
+            }
+        } else {
+            println!("Not solved!");
+        }
+    }
+
+    pub fn encrypt(&mut self, payload: PathBuf, archive_name: String) {
+        // create a new aes key
+        let mut rng = ChaCha20Rng::from_entropy();
+        let mut key = [0u8; 32];
+        let padding = Pkcs1v15Encrypt {};
+        rng.fill_bytes(&mut key);
+
+        // generate a new uuid
+        let uuid = Uuid::new_v4();
+
+        // encrypt the payload with the aes key
+        let data = std::fs::read(payload.clone()).unwrap();
+        let encrypted = data.aes_encrypt(&key);
+
+        let encrypted_filename = archive_name.as_bytes().to_vec().aes_encrypt(&key);
+
+        // RSA encrypt the AES key with the public key
+        let rsa_pub_key = RsaPublicKey::from_pkcs1_pem(
+            &String::from_utf8(self.read_file_contents("rsa_id.pub")).unwrap(),
+        )
+        .unwrap();
+        let encrypted_aes_key = rsa_pub_key.encrypt(&mut rng, padding, &key).unwrap();
+
+        // write the encrypted payload to the archive
+        self.file.seek(SeekFrom::End(0)).unwrap();
+        self.write_file(&format!("contents/{}", &uuid.to_string()), &encrypted);
+        self.write_file(
+            &format!("filenames/{}", &uuid.to_string()),
+            &encrypted_filename,
+        );
+        self.write_file(
+            &format!("aes_keys/{}", &uuid.to_string()),
+            &encrypted_aes_key,
+        );
+    }
+
+    pub fn decrypt(&mut self, target_filename: String, output: PathBuf) {
+        let puzzle = self.puzzle();
+        let solution = if let Some(solution) = puzzle.solution() {
+            solution
+        } else {
+            println!("Puzzle not solved, cannot decrypt");
+            return;
+        };
+
+        let private_key = RsaPrivateKey::from_pkcs1_pem(
+            &String::from_utf8(self.read_file_contents("rsa_id.enc").aes_decrypt(&solution))
+                .unwrap(),
+        )
+        .unwrap();
+
+        let listing = self.listing();
+        let uuids = listing
+            .entries
+            .iter()
+            .filter_map(|(header, _)| {
+                if header.name.starts_with("aes_keys/") {
+                    // extract the uuid from the filename
+                    let uuid = header.name.split('/').last().unwrap();
+                    Some(uuid.to_owned())
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<String>>();
+
+        for uuid in uuids {
+            let encrypted_aes_key = self.read_file_contents(&format!("aes_keys/{}", uuid));
+            let aes_key = private_key
+                .decrypt(Pkcs1v15Encrypt {}, &encrypted_aes_key)
+                .unwrap();
+
+            let encrypted_filename = self.read_file_contents(&format!("filenames/{}", uuid));
+            let filename = String::from_utf8(
+                encrypted_filename.aes_decrypt(&aes_key.clone().try_into().unwrap()),
+            )
+            .unwrap();
+
+            if target_filename == filename {
+                let encrypted_data = self.read_file_contents(&format!("contents/{}", uuid));
+                let data = encrypted_data.aes_decrypt(&aes_key.try_into().unwrap());
+                std::fs::write(output.clone(), data).unwrap();
+                println!("Decrypted to: {:?}", output);
+                return;
+            }
+        }
+
+        println!("File not found");
     }
 }
 
@@ -295,6 +464,88 @@ where
             .seek(SeekFrom::Current(sparse_bytes as i64 - 1))
             .unwrap();
         self.file.write_all(&[0]).unwrap();
+    }
+
+    fn at_eof(&mut self) -> bool {
+        let mut buffer = [0u8; 1];
+        let at_eof = self.file.read(&mut buffer).unwrap() == 0;
+        if at_eof {
+            true
+        } else {
+            self.file.seek(SeekFrom::Current(-1)).unwrap();
+            false
+        }
+    }
+
+    fn current_position(&mut self) -> u64 {
+        self.file.seek(SeekFrom::Current(0)).unwrap()
+    }
+
+    pub fn listing(&mut self) -> TarListing {
+        let mut listing = TarListing {
+            entries: Vec::new(),
+        };
+        let mut header = [0u8; 512];
+        self.file.seek(SeekFrom::Start(0)).unwrap();
+        loop {
+            if self.at_eof() {
+                break;
+            }
+            let header_start = self.current_position();
+
+            self.file.read_exact(&mut header).unwrap();
+            if header.iter().all(|&b| b == 0) {
+                break;
+            }
+            let parsed_header = TarHeader::from_bytes(&header);
+            let next_file_start = parsed_header.size + padding_for(parsed_header.size, 512);
+            listing.entries.push((parsed_header, header_start));
+            self.file
+                .seek(SeekFrom::Current(next_file_start as i64))
+                .unwrap();
+        }
+        listing
+    }
+
+    pub fn read_file_contents_zero_term(&mut self, filename: &str) -> Vec<u8> {
+        let mut buffer = Vec::new();
+        let listing = self.listing();
+        self.file.seek(SeekFrom::Start(0)).unwrap();
+        for (header, start) in listing.entries {
+            if header.name == filename {
+                self.file.seek(SeekFrom::Start(start + 512)).unwrap();
+                // read one byte at a time until we hit a null byte
+                for i in 0..header.size as usize {
+                    buffer.resize(i + 1, 0);
+                    self.file.read_exact(&mut buffer[i..=i]).unwrap();
+                    if buffer[i] == 0 {
+                        buffer.resize(i, 0);
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+        buffer
+    }
+
+    pub fn read_file_contents(&mut self, filename: &str) -> Vec<u8> {
+        let mut buffer = Vec::new();
+        let listing = self.listing();
+        self.file.seek(SeekFrom::Start(0)).unwrap();
+        for (header, start) in listing.entries {
+            if header.name == filename {
+                self.file.seek(SeekFrom::Start(start + 512)).unwrap();
+                buffer.resize(header.size as usize, 0);
+                self.file.read_exact(&mut buffer).unwrap();
+                break;
+            }
+        }
+        buffer
+    }
+
+    fn puzzle(&mut self) -> Puzzle {
+        Puzzle::from_bytes(self.read_file_contents_zero_term("puzzle")).unwrap()
     }
 
     fn initialize(&mut self) {
@@ -328,24 +579,11 @@ where
                 .to_vec()
                 .aes_encrypt(&aes_key),
         );
-        self.write_file(
+        self.write_sparse_file(
             "puzzle",
-            &Puzzle::solved_with_solution(aes_key)
-                .as_bytes()
-                .padded(1024 * 1024 * 1024),
+            &Puzzle::solved_with_solution(aes_key).as_bytes(),
+            1024 * 1024 * 1024,
         );
-        // self.write_sparse_file(
-        //     "puzzle",
-        //     &Puzzle::solved_with_solution(aes_key).as_bytes(),
-        //     1024 * 1024 * 1024,
-        // );
-
-        // // generate a random 1kb file
-        // let mut bytes = [0u8; 1024];
-        // OsRng.fill_bytes(&mut bytes);
-        // self.write_file("random_file.txt", &bytes);
-
-        // self.write_file("final_file.txt", "1234567890".as_bytes());
     }
 
     fn verify(&mut self) -> Result<(), String> {
@@ -369,6 +607,14 @@ impl Puzzle {
         Self { entries }
     }
 
+    fn solution(&self) -> Option<[u8; 32]> {
+        if self.entries.len() == 1 {
+            Some(self.entries[0].0)
+        } else {
+            None
+        }
+    }
+
     fn as_str(&self) -> String {
         let mut result = String::new();
         for (initial_value, count) in &self.entries {
@@ -379,5 +625,22 @@ impl Puzzle {
 
     fn as_bytes(&self) -> Vec<u8> {
         self.as_str().as_bytes().to_vec()
+    }
+
+    fn from_bytes(bytes: Vec<u8>) -> Result<Self, String> {
+        let mut entries = Vec::new();
+        let lines = bytes.split(|&b| b == b'\n');
+        for line in lines {
+            if line.is_empty() {
+                continue;
+            }
+            let mut parts = line.split(|&b| b == b':');
+            let initial_value = parts.next().unwrap();
+            let count = parts.next().unwrap();
+            let initial_value = hex::decode(initial_value).unwrap();
+            let count = std::str::from_utf8(count).unwrap().parse().unwrap();
+            entries.push((initial_value.try_into().unwrap(), count));
+        }
+        Ok(Self { entries })
     }
 }
